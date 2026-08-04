@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { usePatient } from '../App';
 import { useAuth } from '../contexts/AuthContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { HeartPulse, LogOut, Info, FileText, Pill, Activity, TrendingDown, UserCircle } from 'lucide-react';
+import Input from '../components/ui/Input';
+import Modal from '../components/ui/Modal';
+import { HeartPulse, LogOut, Info, FileText, Pill, Activity, TrendingDown, UserCircle, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 function WeightChart({ data }: { data: any[] }) {
@@ -70,6 +73,111 @@ export default function Perfil() {
   const { state: authState, dispatch: authDispatch } = useAuth();
   const { state: patientState, dispatch: patientDispatch } = usePatient();
   const { evaluacion } = patientState;
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordStep, setPasswordStep] = useState(1);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  const openPasswordModal = () => {
+    setPasswordStep(1);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    setIsPasswordModalOpen(true);
+  };
+
+  const closePasswordModal = () => {
+    setIsPasswordModalOpen(false);
+  };
+
+  const handleVerifyCurrentPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    
+    if (!currentPassword) {
+      setPasswordError('Por favor, ingresa tu contraseña actual.');
+      return;
+    }
+
+    const userEmail = authState.user?.email;
+    if (!userEmail) {
+      setPasswordError('No se pudo determinar el correo del usuario.');
+      return;
+    }
+
+    setIsVerifyingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: currentPassword,
+      });
+
+      if (error) {
+        throw new Error('La contraseña actual es incorrecta.');
+      }
+
+      setPasswordStep(2);
+      setPasswordError(null);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Contraseña actual incorrecta.');
+    } finally {
+      setIsVerifyingPassword(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    if (newPassword.length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setPasswordSuccess('¡Tu contraseña ha sido actualizada con éxito!');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        closePasswordModal();
+      }, 2000);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Ocurrió un error al actualizar la contraseña.');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
 
   const handleLogout = async () => {
     patientDispatch({ type: 'RESET' });
@@ -282,14 +390,212 @@ export default function Perfil() {
         </Card>
       )}
 
-      <Button
-        variant="danger"
-        fullWidth
-        onClick={handleLogout}
-        icon={<LogOut size={18} />}
+      <div className="flex flex-col gap-3">
+        <Button
+          variant="secondary"
+          fullWidth
+          onClick={openPasswordModal}
+          icon={<Lock size={18} />}
+        >
+          Cambiar contraseña
+        </Button>
+        <Button
+          variant="danger"
+          fullWidth
+          onClick={handleLogout}
+          icon={<LogOut size={18} />}
+        >
+          Cerrar sesión
+        </Button>
+      </div>
+
+      <Modal
+        isOpen={isPasswordModalOpen}
+        onClose={closePasswordModal}
+        title="Cambiar Contraseña"
       >
-        Cerrar sesión
-      </Button>
+        <div className="mb-6 px-4">
+          <div className="flex items-center justify-between relative mb-2">
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-border z-0" />
+            <div 
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-salud-blue transition-all duration-300 z-0"
+              style={{ width: passwordStep === 1 ? '0%' : '100%' }}
+            />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div 
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                  passwordStep >= 1 
+                    ? 'bg-salud-blue text-white ring-4 ring-salud-blue/10' 
+                    : 'bg-bg-elevated text-text-tertiary border border-border'
+                }`}
+              >
+                1
+              </div>
+              <span className="text-[10px] font-bold text-text-secondary mt-1">Verificación</span>
+            </div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div 
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                  passwordStep >= 2 
+                    ? 'bg-salud-blue text-white ring-4 ring-salud-blue/10' 
+                    : 'bg-bg-elevated text-text-tertiary border border-border'
+                }`}
+              >
+                2
+              </div>
+              <span className="text-[10px] font-bold text-text-secondary mt-1">Nueva Contraseña</span>
+            </div>
+          </div>
+        </div>
+
+        {passwordStep === 1 ? (
+          <form onSubmit={handleVerifyCurrentPassword} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-text-primary">
+                Contraseña actual
+              </label>
+              <div className="relative">
+                <Input
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Introduce tu contraseña actual"
+                  className="pr-12"
+                  icon={<Lock size={18} />}
+                  disabled={isVerifyingPassword}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer flex items-center justify-center"
+                  disabled={isVerifyingPassword}
+                >
+                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {passwordError && (
+              <div className="bg-salud-red-soft border border-salud-red/20 rounded-[var(--radius-md)] px-4 py-2.5 animate-scale-in">
+                <p className="text-sm text-red-800 font-medium">{passwordError}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                fullWidth
+                onClick={closePasswordModal}
+                disabled={isVerifyingPassword}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                disabled={isVerifyingPassword}
+              >
+                {isVerifyingPassword ? 'Verificando...' : 'Siguiente'}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-text-primary">
+                Nueva contraseña
+              </label>
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  className="pr-12"
+                  icon={<Lock size={18} />}
+                  disabled={isUpdatingPassword || !!passwordSuccess}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer flex items-center justify-center"
+                  disabled={isUpdatingPassword || !!passwordSuccess}
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-text-primary">
+                Confirmar nueva contraseña
+              </label>
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repite la contraseña"
+                  className="pr-12"
+                  icon={<Lock size={18} />}
+                  disabled={isUpdatingPassword || !!passwordSuccess}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer flex items-center justify-center"
+                  disabled={isUpdatingPassword || !!passwordSuccess}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {passwordError && (
+              <div className="bg-salud-red-soft border border-salud-red/20 rounded-[var(--radius-md)] px-4 py-2.5 animate-scale-in">
+                <p className="text-sm text-red-800 font-medium">{passwordError}</p>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="bg-salud-green-soft border border-salud-green/20 rounded-[var(--radius-md)] px-4 py-2.5 animate-scale-in flex items-center gap-2">
+                <CheckCircle size={18} className="text-salud-green flex-shrink-0" />
+                <p className="text-sm text-salud-green font-bold">{passwordSuccess}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                fullWidth
+                onClick={() => {
+                  setPasswordStep(1);
+                  setPasswordError(null);
+                }}
+                disabled={isUpdatingPassword || !!passwordSuccess}
+              >
+                Atrás
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                disabled={isUpdatingPassword || !!passwordSuccess}
+              >
+                {isUpdatingPassword ? 'Actualizando...' : 'Guardar'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }
