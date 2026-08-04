@@ -34,7 +34,7 @@ export default function PatientLayout() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg-primary flex overflow-x-hidden">
+    <div className="min-h-dvh bg-bg-primary flex">
       <NotificationOnboarding />
       
       {/* ========== SIDEBAR (Desktop) ========== */}
@@ -95,7 +95,7 @@ export default function PatientLayout() {
       </aside>
 
       {/* ========== MAIN CONTENT ========== */}
-      <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-[220px] min-w-0 w-full">
+      <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-[220px] min-w-0 w-full overflow-x-hidden">
 
         <main className="flex-1 px-4 lg:px-8 pt-6 pb-24 lg:py-8 overflow-y-auto overflow-x-hidden">
           <div className="w-full mx-auto min-w-0">
