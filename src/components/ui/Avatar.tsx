@@ -24,6 +24,7 @@ const roleColors: Record<UserRole, string> = {
   admin: 'bg-gradient-to-br from-violet-500 to-purple-600',
   especialista: 'bg-gradient-to-br from-salud-blue to-salud-green',
   staff: 'bg-gradient-to-br from-slate-500 to-gray-600',
+  asistente: 'bg-gradient-to-br from-amber-500 to-orange-600',
   paciente: 'bg-gradient-to-br from-salud-blue to-salud-green',
 };
 

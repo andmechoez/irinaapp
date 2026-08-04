@@ -29,7 +29,7 @@ const NAV_ITEMS: NavItem[] = [
 export default function StaffLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, dispatch } = useAuth();
+  const { user, isAdmin, isStaff, dispatch } = useAuth();
   const { institution } = useInstitution();
 
   const handleLogout = async () => {
@@ -49,6 +49,7 @@ export default function StaffLayout() {
     switch (user?.role) {
       case 'admin': return 'Administrador';
       case 'especialista': return 'Especialista';
+      case 'asistente': return 'Asistente';
       case 'staff': return 'Personal';
       default: return '';
     }
@@ -92,7 +93,7 @@ export default function StaffLayout() {
               </button>
             );
           })}
-          {isAdmin && (
+          {isStaff && (
             <div className="mt-6">
               <p className="px-3 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Administración</p>
               <Link to="/staff/contenido" className={`flex items-center gap-3 px-2.5 py-2 rounded-lg text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/5`}>
@@ -154,7 +155,7 @@ export default function StaffLayout() {
             </button>
           );
         })}
-        {isAdmin && (
+        {isStaff && (
           <>
             <button
               onClick={() => navigate('/staff/contenido')}
