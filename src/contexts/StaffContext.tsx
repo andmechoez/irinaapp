@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
-import type { Patient, PatientListItem, Evaluacion, StaffDashboardStats, CreatePatientData } from '../types/patients';
+import type { Patient, PatientListItem, Evaluacion, StaffDashboardStats, CreatePatientData, PatientStatus } from '../types/patients';
 import type { EvaluacionInicial, Prescripcion } from '../types/index';
 import { calcularResultados } from '../utils/formulas';
 import { useAuth } from './AuthContext';
@@ -29,6 +29,27 @@ type StaffAction =
   | { type: 'ADD_EVALUATION'; payload: Evaluacion }
   | { type: 'DELETE_EVALUATION'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean };
+
+/** Datos editables de un paciente (sin tocar auth ni evaluaciones) */
+export interface UpdatePatientData {
+  nombre: string;
+  apellido?: string;
+  cedula: string;
+  telefono?: string;
+  fechaNacimiento?: string;
+  edad: number;
+  sexo: import('../types').Sexo;
+  tipoSangre?: string;
+  alergias?: string[];
+  pesoKg: number;
+  tallaCm: number;
+  cinturaCm: number;
+  caderaCm: number;
+  condiciones: import('../types').CondicionMedica[];
+  objetivo: import('../types').Objetivo;
+  nivelActividad: import('../types').NivelActividad;
+  estatus: PatientStatus;
+}
 
 const initialStaffState: StaffState = {
   patients: [],
@@ -163,6 +184,7 @@ interface StaffContextType {
   
   // Actions
   createPatient: (data: CreatePatientData) => Promise<Patient>;
+  updatePatient: (patientId: string, data: UpdatePatientData) => Promise<Patient>;
   addEvaluation: (patientId: string, evaluationData: Omit<Evaluacion, 'id' | 'evaluadorId' | 'evaluadorNombre' | 'fecha' | 'resultados'>, measures: EvaluacionInicial) => Promise<Evaluacion>;
   addPrescription: (patientId: string, prescription: Omit<Prescripcion, 'id' | 'fechaInicio' | 'activa'>) => Promise<void>;
 }
@@ -640,6 +662,91 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   };
 
   /**
+   * Actualiza los datos personales y clínicos de un paciente existente.
+   * No modifica su cuenta de acceso (email/contraseña) ni elimina evaluaciones históricas.
+   */
+  const updatePatient = async (patientId: string, data: UpdatePatientData): Promise<Patient> => {
+    const existing = getPatientById(patientId);
+    if (!existing) throw new Error('Paciente no encontrado');
+
+    const now = new Date().toISOString();
+
+    // Recalcular resultados metabólicos con los nuevos datos
+    const evaluacionInicial: EvaluacionInicial = {
+      userId: existing.userId,
+      nombre: data.nombre,
+      fecha: now,
+      edad: data.edad,
+      sexo: data.sexo,
+      pesoKg: data.pesoKg,
+      tallaCm: data.tallaCm,
+      nivelActividad: data.nivelActividad,
+      circunferenciaCinturaCm: data.cinturaCm,
+      circunferenciaCaderaCm: data.caderaCm,
+      objetivo: data.objetivo,
+      condiciones: data.condiciones,
+      medicamentos: [],
+      restriccionesFisicas: [],
+      apoyoFamiliar: false,
+      motivacion: '',
+    };
+    const resultados = calcularResultados(evaluacionInicial);
+
+    const updatedPatient: Patient = {
+      ...existing,
+      nombre: data.nombre,
+      apellido: data.apellido,
+      cedula: data.cedula,
+      telefono: data.telefono,
+      fechaNacimiento: data.fechaNacimiento,
+      edad: data.edad,
+      sexo: data.sexo,
+      tipoSangre: data.tipoSangre,
+      alergias: data.alergias || [],
+      estatus: data.estatus,
+      pesoKg: data.pesoKg,
+      tallaCm: data.tallaCm,
+      cinturaCm: data.cinturaCm,
+      caderaCm: data.caderaCm,
+      condiciones: data.condiciones,
+      objetivo: data.objetivo,
+      nivelActividad: data.nivelActividad,
+      resultadosActuales: resultados,
+      updatedAt: now,
+    };
+
+    const { error } = await supabase.from('patients').update({
+      nombre: updatedPatient.nombre,
+      apellido: updatedPatient.apellido,
+      cedula: updatedPatient.cedula,
+      telefono: updatedPatient.telefono,
+      fecha_nacimiento: updatedPatient.fechaNacimiento,
+      edad: updatedPatient.edad,
+      sexo: updatedPatient.sexo,
+      tipo_sangre: updatedPatient.tipoSangre,
+      alergias: updatedPatient.alergias,
+      estatus: updatedPatient.estatus,
+      peso_kg: updatedPatient.pesoKg,
+      talla_cm: updatedPatient.tallaCm,
+      cintura_cm: updatedPatient.cinturaCm,
+      cadera_cm: updatedPatient.caderaCm,
+      condiciones: updatedPatient.condiciones,
+      objetivo: updatedPatient.objetivo,
+      nivel_actividad: updatedPatient.nivelActividad,
+      resultados_actuales: updatedPatient.resultadosActuales,
+      updated_at: now,
+    }).eq('id', patientId);
+
+    if (error) {
+      console.error('Error actualizando paciente:', error);
+      throw new Error(`Error al actualizar paciente: ${error.message}`);
+    }
+
+    dispatch({ type: 'UPDATE_PATIENT', payload: updatedPatient });
+    return updatedPatient;
+  };
+
+  /**
    * Agrega una prescripción médica (fármaco, suplemento) al plan del paciente.
    * Esta prescripción aparecerá en el "Dashboard" del paciente para su seguimiento diario de adherencia.
    * 
@@ -674,6 +781,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       getDashboardStats,
       getSelectedPatient,
       createPatient,
+      updatePatient,
       addEvaluation,
       addPrescription,
     }}>

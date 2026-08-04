@@ -22,6 +22,7 @@ import PatientList from './pages/staff/PatientList';
 import PatientCreate from './pages/staff/PatientCreate';
 import PatientDetail from './pages/staff/PatientDetail';
 import PatientEvaluate from './pages/staff/PatientEvaluate';
+import PatientEdit from './pages/staff/PatientEdit';
 import StaffProfile from './pages/staff/StaffProfile';
 import StaffManagement from './pages/staff/admin/StaffManagement';
 import ContentManagement from './pages/staff/admin/UnifiedContent';
@@ -88,6 +89,10 @@ const router = createBrowserRouter([
       {
         path: '/staff/pacientes/:id/evaluar',
         element: <PatientEvaluate />,
+      },
+      {
+        path: '/staff/pacientes/:id/editar',
+        element: <PatientEdit />,
       },
       {
         path: '/staff/perfil',
@@ -191,7 +196,7 @@ export default function App() {
         </InstitutionProvider>
       </AuthProvider>
       {import.meta.env.DEV && (
-        <button 
+        <button
           onClick={() => {
             localStorage.clear();
             sessionStorage.clear();

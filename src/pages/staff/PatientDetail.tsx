@@ -25,7 +25,7 @@ import type { Evaluacion } from '../../types/patients';
 export default function PatientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPatientById, addPrescription, getPatientEvaluations } = useStaff();
+  const { getPatientById, addPrescription, getPatientEvaluations, dispatch } = useStaff();
   
   const patient = id ? getPatientById(id) : undefined;
   const evaluations = patient ? getPatientEvaluations(patient.id) : [];
@@ -34,6 +34,7 @@ export default function PatientDetail() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const { activeTab, setActiveTab } = useTabs('plan');
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluacion | null>(null);
 
@@ -44,6 +45,16 @@ export default function PatientDetail() {
     duracionDias: 30,
     indicaciones: ''
   });
+
+  const [planForm, setPlanForm] = useState({
+    get: 0,
+    pctProteina: 30,
+    pctGrasa: 25,
+    pctCarbs: 45,
+    metaHidratacionMl: 2000,
+    alertaHidratacion: false,
+  });
+  const [planSaving, setPlanSaving] = useState(false);
 
   const [patientState, setPatientState] = useState<any>({ diario: {}, prescripciones: [] });
 
@@ -216,7 +227,12 @@ export default function PatientDetail() {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button variant="secondary" icon={<Edit size={16} />} className="flex-1 md:flex-none justify-center">
+            <Button
+              variant="secondary"
+              icon={<Edit size={16} />}
+              className="flex-1 md:flex-none justify-center"
+              onClick={() => navigate(`/staff/pacientes/${patient.id}/editar`)}
+            >
               Editar Datos
             </Button>
             <Button 
@@ -461,7 +477,30 @@ export default function PatientDetail() {
                       <p className="text-sm font-bold text-salud-green uppercase tracking-wide mb-1">Objetivo Metabólico</p>
                       <p className="text-2xl font-extrabold text-text-primary">{patient.resultadosActuales.get.toFixed(0)} kcal / día</p>
                     </div>
-                    <Button variant="secondary" size="sm">Modificar Plan</Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        if (patient.resultadosActuales) {
+                          const r = patient.resultadosActuales;
+                          const totalKcal = r.get;
+                          const pctProt = Math.round((r.macros.proteinas.kcal / totalKcal) * 100);
+                          const pctGrasa = Math.round((r.macros.grasas.kcal / totalKcal) * 100);
+                          const pctCarbs = Math.round((r.macros.carbohidratos.kcal / totalKcal) * 100);
+                          setPlanForm({
+                            get: Math.round(r.get),
+                            pctProteina: pctProt,
+                            pctGrasa: pctGrasa,
+                            pctCarbs: pctCarbs,
+                            metaHidratacionMl: r.metaHidratacionMl,
+                            alertaHidratacion: r.alertaHidratacion,
+                          });
+                        }
+                        setShowPlanModal(true);
+                      }}
+                    >
+                      Modificar Plan
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
@@ -709,6 +748,224 @@ export default function PatientDetail() {
             </div>
             <div className="p-4 border-t border-border/60 bg-bg-elevated/30 flex justify-end">
               <Button variant="primary" size="sm" onClick={() => setShowReport(false)}>Cerrar Reporte</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Modificar Plan Nutricional */}
+      {showPlanModal && patient?.resultadosActuales && (
+        <div className="fixed inset-0 bg-bg-primary/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-bg-card border border-border/60 rounded-[var(--radius-lg)] shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col animate-slide-up">
+            {/* Header */}
+            <div className="p-5 border-b border-border/60 flex items-center justify-between shrink-0">
+              <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                <Target size={18} className="text-salud-green" />
+                Modificar Plan Nutricional
+              </h3>
+              <button
+                onClick={() => setShowPlanModal(false)}
+                className="p-1.5 rounded-full text-text-tertiary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-5 overflow-y-auto flex-1">
+              {/* GET */}
+              <div>
+                <label className="block text-sm font-semibold text-text-secondary mb-1">
+                  Objetivo Calórico (GET)
+                </label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min={800}
+                    max={5000}
+                    value={planForm.get}
+                    onChange={e => setPlanForm(f => ({ ...f, get: Number(e.target.value) }))}
+                    rightElement={<span className="text-xs text-text-tertiary">kcal/día</span>}
+                  />
+                </div>
+                <p className="text-xs text-text-tertiary mt-1">Rango recomendado: 1000 – 4000 kcal/día</p>
+              </div>
+
+              {/* Macros */}
+              <div>
+                <p className="text-sm font-semibold text-text-secondary mb-3">Distribución de Macronutrientes</p>
+                <div className="space-y-3">
+                  {/* Proteína */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-salud-blue w-24 shrink-0">Proteína (%)</span>
+                    <input
+                      type="range" min={10} max={50} step={1}
+                      value={planForm.pctProteina}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        const remaining = 100 - val - planForm.pctGrasa;
+                        setPlanForm(f => ({ ...f, pctProteina: val, pctCarbs: Math.max(0, remaining) }));
+                      }}
+                      className="flex-1 accent-salud-blue"
+                    />
+                    <span className="text-sm font-bold text-salud-blue w-10 text-right">{planForm.pctProteina}%</span>
+                    <span className="text-xs text-text-tertiary w-16 text-right">
+                      {Math.round((planForm.get * planForm.pctProteina / 100) / 4)}g
+                    </span>
+                  </div>
+                  {/* Grasas */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-text-primary w-24 shrink-0">Grasas (%)</span>
+                    <input
+                      type="range" min={10} max={45} step={1}
+                      value={planForm.pctGrasa}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        const remaining = 100 - val - planForm.pctProteina;
+                        setPlanForm(f => ({ ...f, pctGrasa: val, pctCarbs: Math.max(0, remaining) }));
+                      }}
+                      className="flex-1 accent-gray-500"
+                    />
+                    <span className="text-sm font-bold text-text-primary w-10 text-right">{planForm.pctGrasa}%</span>
+                    <span className="text-xs text-text-tertiary w-16 text-right">
+                      {Math.round((planForm.get * planForm.pctGrasa / 100) / 9)}g
+                    </span>
+                  </div>
+                  {/* Carbohidratos (calculado) */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-salud-amber w-24 shrink-0">Carbos (%)</span>
+                    <div className="flex-1 h-[6px] bg-bg-elevated rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-salud-amber/60 rounded-full transition-all"
+                        style={{ width: `${Math.max(0, planForm.pctCarbs)}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-bold text-salud-amber w-10 text-right">
+                      {Math.max(0, planForm.pctCarbs)}%
+                    </span>
+                    <span className="text-xs text-text-tertiary w-16 text-right">
+                      {Math.round((planForm.get * Math.max(0, planForm.pctCarbs) / 100) / 4)}g
+                    </span>
+                  </div>
+                </div>
+                {/* Total visual */}
+                <div className={`mt-3 text-xs font-bold text-right ${
+                  planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs) === 100
+                    ? 'text-salud-green' : 'text-salud-red'
+                }`}>
+                  Total: {planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs)}%
+                  {planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs) !== 100 && ' — debe sumar 100%'}
+                </div>
+              </div>
+
+              {/* Hidratación */}
+              <div>
+                <label className="block text-sm font-semibold text-text-secondary mb-1">
+                  Meta de Hidratación
+                </label>
+                <Input
+                  type="number"
+                  min={500}
+                  max={5000}
+                  step={50}
+                  value={planForm.metaHidratacionMl}
+                  onChange={e => setPlanForm(f => ({ ...f, metaHidratacionMl: Number(e.target.value) }))}
+                  rightElement={<span className="text-xs text-text-tertiary">ml/día</span>}
+                />
+              </div>
+
+              {/* Alerta Hidratación */}
+              <div className="flex items-center gap-3 p-3 bg-bg-elevated rounded-[var(--radius-md)] border border-border/40">
+                <button
+                  type="button"
+                  onClick={() => setPlanForm(f => ({ ...f, alertaHidratacion: !f.alertaHidratacion }))}
+                  className={`w-10 h-5 rounded-full transition-colors shrink-0 relative ${
+                    planForm.alertaHidratacion ? 'bg-salud-amber' : 'bg-border'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${
+                    planForm.alertaHidratacion ? 'left-5' : 'left-0.5'
+                  }`} />
+                </button>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Alerta de restricción hídrica</p>
+                  <p className="text-xs text-text-tertiary">Activa si el paciente tiene Hipertensión u otras condiciones</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border/60 bg-bg-elevated/30 flex items-center justify-between gap-3">
+              <p className="text-xs text-text-tertiary">
+                Los cambios se aplican de inmediato al perfil del paciente.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setShowPlanModal(false)}>Cancelar</Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={planSaving ||
+                    planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs) !== 100 ||
+                    planForm.get < 800
+                  }
+                  onClick={async () => {
+                    setPlanSaving(true);
+                    try {
+                      const { get: targetGet, pctProteina, pctGrasa, metaHidratacionMl, alertaHidratacion } = planForm;
+                      const pctCarbs = Math.max(0, 100 - pctProteina - pctGrasa);
+
+                      const kcalProt = targetGet * (pctProteina / 100);
+                      const kcalGrasa = targetGet * (pctGrasa / 100);
+                      const kcalCHO = targetGet * (pctCarbs / 100);
+
+                      const updatedResultados = {
+                        ...patient.resultadosActuales!,
+                        get: targetGet,
+                        metaHidratacionMl,
+                        alertaHidratacion,
+                        macros: {
+                          proteinas: {
+                            gramos: kcalProt / 4,
+                            kcal: kcalProt,
+                            porcentaje: pctProteina,
+                            kcalPorGramo: 4,
+                          },
+                          grasas: {
+                            gramos: kcalGrasa / 9,
+                            kcal: kcalGrasa,
+                            porcentaje: pctGrasa,
+                            kcalPorGramo: 9,
+                          },
+                          carbohidratos: {
+                            gramos: kcalCHO / 4,
+                            kcal: kcalCHO,
+                            porcentaje: pctCarbs,
+                            kcalPorGramo: 4,
+                          },
+                          totalKcal: targetGet,
+                        },
+                      };
+
+                      const { error } = await supabase
+                        .from('patients')
+                        .update({ resultados_actuales: updatedResultados, updated_at: new Date().toISOString() })
+                        .eq('id', patient.id);
+
+                      if (error) throw error;
+
+                      dispatch({ type: 'UPDATE_PATIENT', payload: { ...patient, resultadosActuales: updatedResultados } });
+                      setShowPlanModal(false);
+                    } catch (err) {
+                      console.error('Error actualizando plan:', err);
+                      alert('Error al guardar el plan. Intenta de nuevo.');
+                    } finally {
+                      setPlanSaving(false);
+                    }
+                  }}
+                >
+                  {planSaving ? 'Guardando…' : 'Guardar Plan'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
