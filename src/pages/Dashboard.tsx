@@ -7,7 +7,7 @@ import AlertBanner from '../components/ui/AlertBanner';
 import Card from '../components/ui/Card';
 import EmptyPatientState from '../components/patient/EmptyPatientState';
 import CheckInModal from '../components/patient/CheckInModal';
-import { Check, PlayCircle, Pill, Trophy, BookOpen, Info, Activity } from 'lucide-react';
+import { Check, PlayCircle, Pill, Trophy, BookOpen, Info, Activity, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { ClinicalContent } from '../types';
 
@@ -64,6 +64,8 @@ export default function Dashboard() {
   const prescripciones = state.prescripciones || [];
   const adherencia = todayLog?.adherenciaPrescripciones || [];
 
+  const hasCheckInToday = !!todayLog?.habitos?.completado || Object.keys(todayLog?.habitos || {}).length > 0;
+
   /**
    * Registra la toma de una prescripción médica.
    * Marca el medicamento como tomado en la fecha actual y lo añade al historial de adherencia.
@@ -90,11 +92,12 @@ export default function Dashboard() {
     dispatch({ type: 'LOG_WATER', payload: { fecha: selectedDate, amount: PORCION_AGUA_ML } });
   };
 
-  /**
-   * Resta una porción estándar de agua al total diario consumido.
-   */
   const handleRemoveWater = () => {
     dispatch({ type: 'LOG_WATER', payload: { fecha: selectedDate, amount: -PORCION_AGUA_ML } });
+  };
+
+  const handleSetWater = (exactMl: number) => {
+    dispatch({ type: 'LOG_WATER', payload: { fecha: selectedDate, exactAmount: exactMl } });
   };
 
   const streak = Object.keys(state.diario || {}).length;
@@ -109,12 +112,6 @@ export default function Dashboard() {
           </h1>
           <p className="text-text-secondary text-sm">Tu resumen de hoy</p>
         </div>
-        {streak > 0 && (
-          <div className="flex items-center gap-1.5 bg-salud-amber-soft/30 border border-salud-amber/30 px-3 py-1.5 rounded-full shadow-sm">
-            <span className="text-lg">🔥</span>
-            <span className="font-bold text-salud-amber text-sm">{streak} {streak === 1 ? 'día' : 'días'} racha</span>
-          </div>
-        )}
       </div>
 
       {/* Información del Tratamiento Institucional */}
@@ -153,7 +150,9 @@ export default function Dashboard() {
         metaMl={resultados.metaHidratacionMl}
         onAddWater={handleAddWater}
         onRemoveWater={handleRemoveWater}
+        onSetWater={handleSetWater}
         porcionMl={PORCION_AGUA_ML}
+        diario={state.diario}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -208,21 +207,39 @@ export default function Dashboard() {
 
           {/* Check-in Diario Consolidado */}
           <div className="space-y-2 pt-2 border-t border-border/50">
-            <div className="bg-bg-elevated/50 p-4 rounded-[var(--radius-md)] border border-border/40 text-center space-y-3">
-              <div className="w-12 h-12 bg-salud-blue-soft rounded-full flex items-center justify-center mx-auto">
-                <Activity size={24} className="text-salud-blue" />
+            {hasCheckInToday ? (
+              <div className="bg-salud-green/5 p-4 rounded-[var(--radius-md)] border border-salud-green/30 text-center space-y-3">
+                <div className="w-12 h-12 bg-salud-green/10 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 size={24} className="text-salud-green" />
+                </div>
+                <div>
+                  <p className="font-bold text-text-primary text-sm">Check-in de hoy completado</p>
+                  <p className="text-xs text-text-secondary mt-1">¡Excelente trabajo! Registraste tus hábitos del día. Tu próximo check-in estará disponible mañana.</p>
+                </div>
+                <button
+                  onClick={() => setIsCheckInOpen(true)}
+                  className="w-full py-2 bg-salud-green/10 text-salud-green border border-salud-green/30 rounded-[var(--radius-md)] font-bold text-xs hover:bg-salud-green/20 transition-colors cursor-pointer"
+                >
+                  Ver / Editar respuestas o Historial
+                </button>
               </div>
-              <div>
-                <p className="font-bold text-text-primary text-sm">Check-in de Hábitos</p>
-                <p className="text-xs text-text-secondary mt-1">Registra tu sueño, digestión, dolor y nivel de energía del día de hoy.</p>
+            ) : (
+              <div className="bg-salud-blue-soft/30 p-4 rounded-[var(--radius-md)] border border-salud-blue/20 text-center space-y-3">
+                <div className="w-12 h-12 bg-salud-blue-soft rounded-full flex items-center justify-center mx-auto">
+                  <Activity size={24} className="text-salud-blue" />
+                </div>
+                <div>
+                  <p className="font-bold text-text-primary text-sm">Check-in de Hábitos</p>
+                  <p className="text-xs text-text-secondary mt-1">Registra tu sueño, digestión, dolor y nivel de energía del día de hoy.</p>
+                </div>
+                <button
+                  onClick={() => setIsCheckInOpen(true)}
+                  className="w-full py-2 bg-salud-blue text-white rounded-[var(--radius-md)] font-bold text-sm shadow-sm shadow-salud-blue/20 hover:bg-salud-blue-hover transition-colors cursor-pointer active:scale-[0.98]"
+                >
+                  Hacer mi Check-in
+                </button>
               </div>
-              <button
-                onClick={() => setIsCheckInOpen(true)}
-                className="w-full py-2 bg-salud-blue text-white rounded-[var(--radius-md)] font-bold text-sm shadow-sm shadow-salud-blue/20 hover:bg-salud-blue-hover transition-colors cursor-pointer active:scale-[0.98]"
-              >
-                Hacer mi Check-in
-              </button>
-            </div>
+            )}
           </div>
         </Card>
 

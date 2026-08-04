@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePatient } from '../App';
 import Avatar from '../components/ui/Avatar';
 import { supabase } from '../lib/supabase';
-import NotificationOnboarding from '../components/patient/NotificationOnboarding';
 
 // =============================================
 // Patient Layout — Portal del Paciente
@@ -35,8 +34,6 @@ export default function PatientLayout() {
 
   return (
     <div className="min-h-dvh bg-bg-primary flex">
-      <NotificationOnboarding />
-      
       {/* ========== SIDEBAR (Desktop) ========== */}
       <aside className="hidden lg:flex flex-col w-[220px] bg-slate-900 text-white fixed left-0 top-0 bottom-0 z-40 transition-all duration-300 ease-out">
         {/* Branding */}

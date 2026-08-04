@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 type PatientAction =
   | { type: 'SET_EVALUACION'; payload: EvaluacionInicial }
   | { type: 'SET_RESULTADOS'; payload: ResultadosMetabolicos }
-  | { type: 'LOG_WATER'; payload: { fecha: string; amount: number } }
+  | { type: 'LOG_WATER'; payload: { fecha: string; amount?: number; exactAmount?: number } }
   | { type: 'LOG_MEAL'; payload: { fecha: string; mealName: string; raciones: string[] } }
   | { type: 'LOG_HABITS'; payload: { fecha: string; habitos?: Partial<RegistroHabitos>; adherenciaPrescripciones?: any[] } }
   | { type: 'TOGGLE_FAVORITA'; payload: string }
@@ -34,15 +34,16 @@ function patientReducer(state: PatientState, action: PatientAction): PatientStat
     case 'SET_RESULTADOS':
       return { ...state, resultados: action.payload };
     case 'LOG_WATER': {
-      const { fecha, amount } = action.payload;
+      const { fecha, amount = 0, exactAmount } = action.payload;
       const todayLog = state.diario[fecha] || { fecha, hidratacionMl: 0, comidasRegistradas: {} };
+      const newAmount = exactAmount !== undefined ? exactAmount : Math.max(0, todayLog.hidratacionMl + amount);
       return {
         ...state,
         diario: {
           ...state.diario,
           [fecha]: {
             ...todayLog,
-            hidratacionMl: Math.max(0, todayLog.hidratacionMl + amount)
+            hidratacionMl: Math.max(0, newAmount)
           }
         }
       };
