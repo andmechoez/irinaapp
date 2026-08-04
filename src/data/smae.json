@@ -1,0 +1,186 @@
+[
+  {
+    "id": "cereales_altos_cho_bajos_grasas",
+    "categoria": "Cereales, tubérculos y plátanos",
+    "subcategoria": "Cereales altos en carbohidratos y bajos en grasas",
+    "cho": 30,
+    "prot": 4,
+    "grasas": 1
+  },
+  {
+    "id": "cereales_medios_cho_bajos_grasas",
+    "categoria": "Cereales, tubérculos y plátanos",
+    "subcategoria": "Cereales medios en carbohidratos y bajos en grasas",
+    "cho": 20,
+    "prot": 3,
+    "grasas": 1
+  },
+  {
+    "id": "cereales_medios_cho_medios_grasas",
+    "categoria": "Cereales, tubérculos y plátanos",
+    "subcategoria": "Cereales medios en carbohidratos y medios en grasas",
+    "cho": 20,
+    "prot": 2,
+    "grasas": 6
+  },
+  {
+    "id": "frutas_medias_cho",
+    "categoria": "Frutas",
+    "subcategoria": "Frutas medias en carbohidratos",
+    "cho": 20,
+    "prot": 1,
+    "grasas": 0
+  },
+  {
+    "id": "frutas_bajas_cho",
+    "categoria": "Frutas",
+    "subcategoria": "Frutas bajas en carbohidratos",
+    "cho": 10,
+    "prot": 1,
+    "grasas": 0
+  },
+  {
+    "id": "frutas_deshidratadas",
+    "categoria": "Frutas",
+    "subcategoria": "Frutas deshidratadas",
+    "cho": 20,
+    "prot": 1,
+    "grasas": 0
+  },
+  {
+    "id": "vegetales_bajos_cho",
+    "categoria": "Vegetales",
+    "subcategoria": "Vegetales bajos en carbohidratos",
+    "cho": 5,
+    "prot": 1,
+    "grasas": 0
+  },
+  {
+    "id": "vegetales_libre",
+    "categoria": "Vegetales",
+    "subcategoria": "Vegetales de libre consumo",
+    "cho": 3,
+    "prot": 2,
+    "grasas": 0
+  },
+  {
+    "id": "lacteos_enteros",
+    "categoria": "Lácteos",
+    "subcategoria": "Lácteos enteros altos en grasas",
+    "cho": 11,
+    "prot": 8,
+    "grasas": 8
+  },
+  {
+    "id": "lacteos_semidescremados",
+    "categoria": "Lácteos",
+    "subcategoria": "Lácteos semidescremados medios en grasas",
+    "cho": 11,
+    "prot": 8,
+    "grasas": 4
+  },
+  {
+    "id": "lacteos_descremados_bajos_grasas",
+    "categoria": "Lácteos",
+    "subcategoria": "Lácteos descremados bajos en grasas",
+    "cho": 12,
+    "prot": 8,
+    "grasas": 1
+  },
+  {
+    "id": "lacteos_descremados_altos_cho",
+    "categoria": "Lácteos",
+    "subcategoria": "Lácteos descremados altos en carbohidratos",
+    "cho": 25,
+    "prot": 6,
+    "grasas": 3
+  },
+  {
+    "id": "lacteos_quesos",
+    "categoria": "Lácteos",
+    "subcategoria": "Quesos",
+    "cho": 1,
+    "prot": 7,
+    "grasas": 7
+  },
+  {
+    "id": "carnes_altas_grasas",
+    "categoria": "Carnes, pescados y huevos",
+    "subcategoria": "Carnes, pescados y huevos altos en grasas",
+    "cho": 1,
+    "prot": 11,
+    "grasas": 15
+  },
+  {
+    "id": "carnes_medias_grasas",
+    "categoria": "Carnes, pescados y huevos",
+    "subcategoria": "Carnes, pescados y huevos medios en grasas",
+    "cho": 0,
+    "prot": 11,
+    "grasas": 7
+  },
+  {
+    "id": "carnes_bajas_grasas",
+    "categoria": "Carnes, pescados y huevos",
+    "subcategoria": "Carnes, pescados y huevos bajos en grasas",
+    "cho": 0,
+    "prot": 11,
+    "grasas": 2
+  },
+  {
+    "id": "embutidos",
+    "categoria": "Carnes, pescados y huevos",
+    "subcategoria": "Embutidos",
+    "cho": 1,
+    "prot": 7,
+    "grasas": 7
+  },
+  {
+    "id": "leguminosas",
+    "categoria": "Leguminosas",
+    "subcategoria": "Leguminosas",
+    "cho": 20,
+    "prot": 9,
+    "grasas": 1
+  },
+  {
+    "id": "grasas_altas_grasas",
+    "categoria": "Grasas y frutos secos",
+    "subcategoria": "Altos en grasas",
+    "cho": 1,
+    "prot": 1,
+    "grasas": 12
+  },
+  {
+    "id": "grasas_altas_grasas_bajas_cho",
+    "categoria": "Grasas y frutos secos",
+    "subcategoria": "Altos en grasas y bajos en carbohidratos",
+    "cho": 8,
+    "prot": 4,
+    "grasas": 10
+  },
+  {
+    "id": "grasas_medias_grasas",
+    "categoria": "Grasas y frutos secos",
+    "subcategoria": "Medios en grasas",
+    "cho": 2,
+    "prot": 1,
+    "grasas": 7
+  },
+  {
+    "id": "grasas_medias_grasas_bajas_cho",
+    "categoria": "Grasas y frutos secos",
+    "subcategoria": "Medios en grasas y bajos en carbohidratos",
+    "cho": 12,
+    "prot": 2,
+    "grasas": 7
+  },
+  {
+    "id": "azucares",
+    "categoria": "Azúcares",
+    "subcategoria": "Azúcares y alimentos azucarados",
+    "cho": 10,
+    "prot": 0,
+    "grasas": 0
+  }
+]

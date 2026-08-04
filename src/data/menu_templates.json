@@ -1,0 +1,251 @@
+[
+  {
+    "id": "template_1500",
+    "target_kcal": 1500,
+    "nombre": "Plantilla Base 1500 Kcal",
+    "tiempos": [
+      {
+        "nombre": "Desayuno",
+        "horario": "08:00 AM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 1 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 1 },
+          { "smae_id": "lacteos_enteros", "cantidad": 1 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 1.5 }
+        ]
+      },
+      {
+        "nombre": "Almuerzo",
+        "horario": "02:00 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 2 },
+          { "smae_id": "vegetales_libre", "cantidad": 2 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 2.5 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1.5 }
+        ]
+      },
+      {
+        "nombre": "Cena",
+        "horario": "08:00 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 1 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 1 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 1 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "template_1800",
+    "target_kcal": 1800,
+    "nombre": "Plantilla Base 1800 Kcal",
+    "tiempos": [
+      {
+        "nombre": "Desayuno",
+        "horario": "08:00 AM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 1.5 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 1 },
+          { "smae_id": "lacteos_enteros", "cantidad": 1 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 2 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Colación 1",
+        "horario": "11:30 AM",
+        "raciones": [
+          { "smae_id": "frutas_medias_cho", "cantidad": 1 },
+          { "smae_id": "grasas_altas_grasas_bajas_cho", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Almuerzo",
+        "horario": "02:30 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 2 },
+          { "smae_id": "leguminosas", "cantidad": 1 },
+          { "smae_id": "vegetales_libre", "cantidad": 2 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 3 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 2 }
+        ]
+      },
+      {
+        "nombre": "Cena",
+        "horario": "08:00 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 1.5 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 1 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 2 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "template_2000",
+    "target_kcal": 2000,
+    "nombre": "Plantilla Base 2000 Kcal",
+    "tiempos": [
+      {
+        "nombre": "Desayuno",
+        "horario": "08:00 AM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 2 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 1 },
+          { "smae_id": "lacteos_enteros", "cantidad": 1.5 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 2 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Colación 1",
+        "horario": "11:30 AM",
+        "raciones": [
+          { "smae_id": "frutas_medias_cho", "cantidad": 1 },
+          { "smae_id": "grasas_altas_grasas_bajas_cho", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Almuerzo",
+        "horario": "02:30 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 2.5 },
+          { "smae_id": "leguminosas", "cantidad": 1.5 },
+          { "smae_id": "vegetales_libre", "cantidad": 2 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 3 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 2 }
+        ]
+      },
+      {
+        "nombre": "Colación 2",
+        "horario": "05:30 PM",
+        "raciones": [
+          { "smae_id": "frutas_medias_cho", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Cena",
+        "horario": "08:00 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 2 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 1 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 2 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1.5 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "template_2500",
+    "target_kcal": 2500,
+    "nombre": "Plantilla Hipermetabólica 2500 Kcal",
+    "tiempos": [
+      {
+        "nombre": "Desayuno",
+        "horario": "08:00 AM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 3 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 1 },
+          { "smae_id": "lacteos_enteros", "cantidad": 2 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 3 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1.5 }
+        ]
+      },
+      {
+        "nombre": "Colación 1",
+        "horario": "11:30 AM",
+        "raciones": [
+          { "smae_id": "frutas_medias_cho", "cantidad": 2 },
+          { "smae_id": "grasas_altas_grasas_bajas_cho", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Almuerzo",
+        "horario": "02:30 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 3.5 },
+          { "smae_id": "leguminosas", "cantidad": 2 },
+          { "smae_id": "vegetales_libre", "cantidad": 3 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 4 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 2 }
+        ]
+      },
+      {
+        "nombre": "Colación 2",
+        "horario": "05:30 PM",
+        "raciones": [
+          { "smae_id": "frutas_medias_cho", "cantidad": 2 },
+          { "smae_id": "lacteos_enteros", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Cena",
+        "horario": "08:00 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 3 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 2 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 3 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 2 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "template_3000",
+    "target_kcal": 3000,
+    "nombre": "Plantilla Estrés Clínico 3000 Kcal",
+    "tiempos": [
+      {
+        "nombre": "Desayuno",
+        "horario": "08:00 AM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 4 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 2 },
+          { "smae_id": "lacteos_enteros", "cantidad": 2 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 4 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 2 }
+        ]
+      },
+      {
+        "nombre": "Colación 1",
+        "horario": "11:30 AM",
+        "raciones": [
+          { "smae_id": "frutas_medias_cho", "cantidad": 2 },
+          { "smae_id": "grasas_altas_grasas_bajas_cho", "cantidad": 2 }
+        ]
+      },
+      {
+        "nombre": "Almuerzo",
+        "horario": "02:30 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 4 },
+          { "smae_id": "leguminosas", "cantidad": 2 },
+          { "smae_id": "vegetales_libre", "cantidad": 3 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 5 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 3 }
+        ]
+      },
+      {
+        "nombre": "Colación 2",
+        "horario": "05:30 PM",
+        "raciones": [
+          { "smae_id": "frutas_medias_cho", "cantidad": 2 },
+          { "smae_id": "lacteos_enteros", "cantidad": 1 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 1 }
+        ]
+      },
+      {
+        "nombre": "Cena",
+        "horario": "08:00 PM",
+        "raciones": [
+          { "smae_id": "cereales_medios_cho_bajos_grasas", "cantidad": 4 },
+          { "smae_id": "vegetales_bajos_cho", "cantidad": 2 },
+          { "smae_id": "carnes_bajas_grasas", "cantidad": 4 },
+          { "smae_id": "grasas_altas_grasas", "cantidad": 2 }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+/* =============================================
+   AVIVA — Design System
+   Paleta clínica accesible WCAG 2.1
+   ============================================= */
+
+@theme {
+  /* Primary palette (Vivid Purple & Indigo) */
+  --color-salud-blue: #7C3AED;
+  --color-salud-blue-light: #8B5CF6;
+  --color-salud-blue-soft: #F3E8FF;
+  
+  --color-salud-green: #0D9488;
+  --color-salud-green-light: #14B8A6;
+  --color-salud-green-soft: #F0FDFA;
+
+  /* Semantic */
+  --color-salud-red: #E11D48;
+  --color-salud-red-soft: #FFE4E6;
+  --color-salud-amber: #D97706;
+  --color-salud-amber-soft: #FEF3C7;
+
+  /* Neutrals */
+  --color-bg-primary: #F9FAFB;
+  --color-bg-card: #FFFFFF;
+  --color-bg-elevated: #F1F5F9;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #64748B;
+  --color-text-tertiary: #94A3B8;
+  --color-border: #E2E8F0;
+  --color-border-focus: #7C3AED;
+
+  /* Typography */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Shadows (Soft & Elegant) */
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glass: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+
+  /* Spacing (for accessibility - generous touch targets) */
+  --spacing-touch: 50px;
+
+  /* Border radius (Compact/Executive) */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Animations */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+}
+
+/* =============================================
+   Global Reset & Base Styles
+   ============================================= */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar oculta en mobile */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Focus visible para accesibilidad */
+:focus-visible {
+  outline: 3px solid var(--color-salud-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* =============================================
+   Custom Animations
+   ============================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseSoft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fillUp {
+  from {
+    height: 0%;
+  }
+
+  to {
+    height: var(--fill-height);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s var(--ease-smooth) both;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s var(--ease-spring) both;
+}
+
+.animate-slide-right {
+  animation: slideInRight 0.4s var(--ease-spring) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s var(--ease-spring) both;
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.delay-1 {
+  animation-delay: 0.05s;
+}
+
+.delay-2 {
+  animation-delay: 0.1s;
+}
+
+.delay-3 {
+  animation-delay: 0.15s;
+}
+
+.delay-4 {
+  animation-delay: 0.2s;
+}
+
+.delay-5 {
+  animation-delay: 0.25s;
+}
+
+.delay-6 {
+  animation-delay: 0.3s;
+}
+
+/* =============================================
+   Safe Areas (notch devices)
+   ============================================= */
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
