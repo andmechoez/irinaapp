@@ -96,12 +96,6 @@ export default function Dashboard() {
     dispatch({ type: 'LOG_WATER', payload: { fecha: selectedDate, amount: -PORCION_AGUA_ML } });
   };
 
-  const handleSetWater = (exactMl: number) => {
-    dispatch({ type: 'LOG_WATER', payload: { fecha: selectedDate, exactAmount: exactMl } });
-  };
-
-  const streak = Object.keys(state.diario || {}).length;
-
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Saludo y Header */}
@@ -150,7 +144,6 @@ export default function Dashboard() {
         metaMl={resultados.metaHidratacionMl}
         onAddWater={handleAddWater}
         onRemoveWater={handleRemoveWater}
-        onSetWater={handleSetWater}
         porcionMl={PORCION_AGUA_ML}
         diario={state.diario}
       />
