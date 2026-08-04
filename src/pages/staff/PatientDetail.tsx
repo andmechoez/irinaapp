@@ -216,7 +216,12 @@ export default function PatientDetail() {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button variant="secondary" icon={<Edit size={16} />} className="flex-1 md:flex-none justify-center">
+            <Button
+              variant="secondary"
+              icon={<Edit size={16} />}
+              className="flex-1 md:flex-none justify-center"
+              onClick={() => navigate(`/staff/pacientes/${patient.id}/editar`)}
+            >
               Editar Datos
             </Button>
             <Button 
