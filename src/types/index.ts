@@ -299,6 +299,8 @@ export interface FiltrosReceta {
 
 /** Registro de hábitos diarios (dolor, sueño, medicación) */
 export interface RegistroHabitos {
+  completado?: boolean;
+  fechaCompletado?: string;
   medicacionTomada?: boolean; // Legacy: will be replaced by specific adherence
   horasSueno?: number;
   nivelDolor?: number;
