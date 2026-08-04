@@ -65,7 +65,7 @@ const router = createBrowserRouter([
   // ===== STAFF PORTAL =====
   {
     element: (
-      <RoleGuard allowedRoles={['admin', 'especialista', 'staff']}>
+      <RoleGuard allowedRoles={['admin', 'especialista', 'staff', 'asistente']}>
         <StaffLayout />
       </RoleGuard>
     ),

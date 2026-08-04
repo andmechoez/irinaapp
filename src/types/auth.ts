@@ -4,7 +4,7 @@
 // =============================================
 
 /** Roles disponibles en la plataforma */
-export type UserRole = 'admin' | 'especialista' | 'staff' | 'paciente';
+export type UserRole = 'admin' | 'especialista' | 'staff' | 'asistente' | 'paciente';
 
 /** Roles que pertenecen al personal médico/institucional */
 export type StaffRole = Exclude<UserRole, 'paciente'>;
@@ -113,13 +113,14 @@ export const getPermissions = (role: UserRole): Permissions => {
         canViewGlobalStats: true,
         canManageInstitution: false,
       };
+    case 'asistente':
     case 'staff':
       return {
         canCreateStaff: false,
-        canCreatePatients: false,
+        canCreatePatients: true,
         canEditPatientClinicalData: false,
         canViewPatientList: true,
-        canViewClinicalHistory: false,
+        canViewClinicalHistory: true,
         canCreateEvaluation: false,
         canViewStaffDashboard: true,
         canRegisterDailyHabits: false,

@@ -1,15 +1,4 @@
--- ===================================================
--- Solución para RLS y CHECK constraint de la tabla public.users
--- Ejecutar en el Editor SQL de Supabase Dashboard
--- ===================================================
-
--- 1. Actualizar el CHECK constraint para permitir el rol 'asistente'
-ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_role_check;
-
-ALTER TABLE public.users ADD CONSTRAINT users_role_check 
-  CHECK (role IN ('admin', 'especialista', 'staff', 'asistente', 'paciente'));
-
--- 2. Función para obtener el rol del usuario autenticado de forma segura sin recursión
+-- 1. Función auxiliar de seguridad para evitar la recursión infinita al validar roles
 CREATE OR REPLACE FUNCTION public.get_user_role()
 RETURNS text
 LANGUAGE sql
@@ -19,10 +8,10 @@ AS $$
   SELECT role FROM public.users WHERE id = auth.uid();
 $$;
 
--- Asegurar RLS activo
+-- 2. Asegurar RLS en la tabla users
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
--- Eliminar políticas antiguas para evitar conflictos
+-- Limpiar políticas antiguas
 DROP POLICY IF EXISTS "Los usuarios pueden ver su propio perfil" ON public.users;
 DROP POLICY IF EXISTS "El staff puede ver a los pacientes" ON public.users;
 DROP POLICY IF EXISTS "El staff puede ver a los usuarios" ON public.users;
@@ -31,7 +20,7 @@ DROP POLICY IF EXISTS "Admins o usuarios pueden insertar en users" ON public.use
 DROP POLICY IF EXISTS "Admins o usuarios pueden actualizar users" ON public.users;
 DROP POLICY IF EXISTS "Admins pueden eliminar users" ON public.users;
 
--- 2. Política SELECT: Cada usuario ve su perfil o el staff/admin ve a todos
+-- 3. Permitir lectura a staff y admin
 CREATE POLICY "El staff y admin pueden ver a todos los usuarios"
 ON public.users
 FOR SELECT
@@ -39,7 +28,7 @@ USING (
   auth.uid() = id OR public.get_user_role() IN ('admin', 'especialista', 'staff', 'asistente')
 );
 
--- 3. Política INSERT: Admins pueden crear usuarios en users o el usuario crea el suyo
+-- 4. Permitir INSERT a administradores
 CREATE POLICY "Admins o usuarios pueden insertar en users"
 ON public.users
 FOR INSERT
@@ -47,7 +36,7 @@ WITH CHECK (
   public.get_user_role() = 'admin' OR auth.uid() = id
 );
 
--- 4. Política UPDATE: Admins actualizan cualquier usuario o cada uno su perfil
+-- 5. Permitir UPDATE a administradores o al propio usuario
 CREATE POLICY "Admins o usuarios pueden actualizar users"
 ON public.users
 FOR UPDATE
@@ -55,11 +44,10 @@ USING (
   public.get_user_role() = 'admin' OR auth.uid() = id
 );
 
--- 5. Política DELETE: Admins pueden eliminar registros en users
+-- 6. Permitir DELETE a administradores
 CREATE POLICY "Admins pueden eliminar users"
 ON public.users
 FOR DELETE
 USING (
   public.get_user_role() = 'admin'
 );
-

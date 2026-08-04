@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE public.users (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
-  role TEXT NOT NULL CHECK (role IN ('admin', 'especialista', 'staff', 'paciente')),
+  role TEXT NOT NULL CHECK (role IN ('admin', 'especialista', 'staff', 'asistente', 'paciente')),
   nombre TEXT NOT NULL,
   apellido TEXT,
   institution_id TEXT,
@@ -23,9 +23,29 @@ CREATE TABLE public.users (
 -- Habilitar RLS en users
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Los usuarios pueden ver su propio perfil" ON public.users FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "El staff puede ver a los pacientes" ON public.users FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin', 'especialista', 'staff'))
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role FROM public.users WHERE id = auth.uid();
+$$;
+
+CREATE POLICY "El staff y admin pueden ver a todos los usuarios" ON public.users FOR SELECT USING (
+  auth.uid() = id OR public.get_user_role() IN ('admin', 'especialista', 'staff', 'asistente')
+);
+
+CREATE POLICY "Admins o usuarios pueden insertar en users" ON public.users FOR INSERT WITH CHECK (
+  public.get_user_role() = 'admin' OR auth.uid() = id
+);
+
+CREATE POLICY "Admins o usuarios pueden actualizar users" ON public.users FOR UPDATE USING (
+  public.get_user_role() = 'admin' OR auth.uid() = id
+);
+
+CREATE POLICY "Admins pueden eliminar users" ON public.users FOR DELETE USING (
+  public.get_user_role() = 'admin'
 );
 
 -- 2. Tabla de Pacientes
