@@ -349,7 +349,9 @@ export function PatientDataProvider({ children }: { children: React.ReactNode })
           recetasUsuario: [],
           recetasFavoritas: mappedFavorites,
           calificaciones: mappedRatings,
-          prescripciones: mappedPrescriptions
+          prescripciones: mappedPrescriptions,
+          rutinaVideoUrl: patientData.rutina_video_url || undefined,
+          rutinaItems: patientData.rutina_items || undefined,
         };
         
         prevDiarioRef.current = diario; // Prevent initial hydration from triggering the useEffect sync

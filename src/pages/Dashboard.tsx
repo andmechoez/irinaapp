@@ -18,8 +18,8 @@ export default function Dashboard() {
   const [selectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   
+  // Reto Semanal: contenido global de clinical_content
   const [reto, setReto] = useState<ClinicalContent | null>(null);
-  const [rutina, setRutina] = useState<ClinicalContent | null>(null);
 
   useEffect(() => {
     async function fetchDynamicContent() {
@@ -31,29 +31,23 @@ export default function Dashboard() {
         .eq('is_active', true);
         
       if (!error && data) {
-        // Filter those that match condition, objective or are general
         const validRetos = data.filter(c => 
           c.type === 'reto' && 
           (!c.trigger_condition || evaluacion.condiciones.includes(c.trigger_condition)) &&
           (!c.trigger_objective || c.trigger_objective === evaluacion.objetivo)
         );
-        const validRutinas = data.filter(c => 
-          c.type === 'rutina' && 
-          (!c.trigger_condition || evaluacion.condiciones.includes(c.trigger_condition)) &&
-          (!c.trigger_objective || c.trigger_objective === evaluacion.objetivo)
-        );
-        
-        // Pick random
         if (validRetos.length > 0) {
           setReto(validRetos[Math.floor(Math.random() * validRetos.length)]);
-        }
-        if (validRutinas.length > 0) {
-          setRutina(validRutinas[Math.floor(Math.random() * validRutinas.length)]);
         }
       }
     }
     fetchDynamicContent();
   }, [evaluacion]);
+
+  // Rutina de rehabilitación: asignada individualmente por el equipo médico
+  const rutinaVideoUrl = state.rutinaVideoUrl;
+  const rutinaItems = state.rutinaItems;
+  const hasRutina = !!(rutinaVideoUrl || (rutinaItems && rutinaItems.length > 0));
   
   if (!evaluacion || !resultados) {
     return <EmptyPatientState />;
@@ -260,23 +254,51 @@ export default function Dashboard() {
 
           {/* Rutina de Rehabilitación */}
           <Card padding="md" className="flex-1 flex flex-col justify-center">
-            <div className="flex items-start justify-between">
-              <div className="space-y-0.5">
-                <h2 className="text-base font-bold text-text-primary">Rutina de Rehabilitación</h2>
-                <p className="text-text-secondary text-sm flex items-center gap-1.5">
-                  <span className="text-lg">{rutina?.icon || '🏃‍♂️'}</span> {rutina?.title || '15 min - Movimiento Ligero'}
-                </p>
-                {rutina?.description && (
-                  <p className="text-xs text-text-tertiary mt-1">{rutina.description}</p>
+            <h2 className="text-base font-bold text-text-primary mb-2">Rutina de Rehabilitación</h2>
+
+            {hasRutina ? (
+              <>
+                {/* Lista de ítems de la rutina */}
+                {rutinaItems && rutinaItems.length > 0 ? (
+                  <ul className="space-y-1.5 mb-3">
+                    {rutinaItems.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-text-secondary">
+                        <span className="mt-0.5 w-4 h-4 rounded-full bg-salud-blue-soft text-salud-blue flex items-center justify-center flex-shrink-0 font-bold text-[10px]">
+                          {i + 1}
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                {/* Botón de video: solo si hay URL */}
+                {rutinaVideoUrl ? (
+                  <a
+                    href={rutinaVideoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto sm:px-4 bg-white text-salud-blue font-bold py-1.5 text-xs rounded-[var(--radius-md)] border border-salud-blue/20 shadow-sm flex items-center justify-center gap-2 hover:bg-salud-blue-soft transition-colors cursor-pointer active:scale-[0.98] mt-auto"
+                  >
+                    <PlayCircle size={18} />
+                    Ver Guía en Video
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs text-text-tertiary mt-auto pt-2 border-t border-border/40">
+                    <PlayCircle size={14} className="opacity-40" />
+                    <span>El video guía estará disponible pronto</span>
+                  </div>
                 )}
+              </>
+            ) : (
+              /* Estado vacío: sin rutina asignada por el equipo médico */
+              <div className="flex flex-col items-center justify-center text-center py-4 gap-2">
+                <span className="text-3xl opacity-30">🏃‍♂️</span>
+                <p className="text-xs text-text-tertiary leading-relaxed max-w-[180px]">
+                  Próximamente tu nutricionista subirá una rutina adecuada para ti
+                </p>
               </div>
-            </div>
-            <div className="mt-3 flex sm:justify-start">
-              <button className="w-full sm:w-auto sm:px-4 bg-white text-salud-blue font-bold py-1.5 text-xs rounded-[var(--radius-md)] border border-salud-blue/20 shadow-sm flex items-center justify-center gap-2 hover:bg-salud-blue-soft transition-colors cursor-pointer active:scale-[0.98]">
-                <PlayCircle size={18} />
-                Ver Guía
-              </button>
-            </div>
+            )}
           </Card>
         </div>
       </div>

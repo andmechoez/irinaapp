@@ -39,6 +39,8 @@ export interface ClinicalContent {
   trigger_objective?: string;
   is_active: boolean;
   created_at?: string;
+  video_url?: string;       // URL de YouTube a la que redirigirá el botón "Ver Guía"
+  items?: string[];         // Lista de ítems de la rutina (pasos a seguir)
 }
 
 export interface EvaluacionInicial {
@@ -343,6 +345,9 @@ export interface PatientState {
   recetasFavoritas: string[];
   calificaciones: Record<string, number>;
   prescripciones: Prescripcion[];
+  // Rutina de rehabilitación asignada por el equipo médico
+  rutinaVideoUrl?: string;
+  rutinaItems?: string[];
 }
 
 // =============================================

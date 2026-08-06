@@ -137,6 +137,8 @@ function mapDatabasePatient(p: any): Patient {
     objetivo: p.objetivo,
     condiciones: p.condiciones || [],
     resultadosActuales: p.resultados_actuales,
+    rutinaVideoUrl: p.rutina_video_url || undefined,
+    rutinaItems: p.rutina_items || undefined,
     totalEvaluaciones: p.total_evaluaciones || 0,
     ultimaEvaluacion: p.ultima_evaluacion || p.created_at,
     createdAt: p.created_at,
@@ -185,6 +187,7 @@ interface StaffContextType {
   // Actions
   createPatient: (data: CreatePatientData) => Promise<Patient>;
   updatePatient: (patientId: string, data: UpdatePatientData) => Promise<Patient>;
+  updatePatientRutina: (patientId: string, data: { videoUrl?: string; items?: string[] }) => Promise<void>;
   addEvaluation: (patientId: string, evaluationData: Omit<Evaluacion, 'id' | 'evaluadorId' | 'evaluadorNombre' | 'fecha' | 'resultados'>, measures: EvaluacionInicial) => Promise<Evaluacion>;
   addPrescription: (patientId: string, prescription: Omit<Prescripcion, 'id' | 'fechaInicio' | 'activa'>) => Promise<void>;
 }
@@ -747,6 +750,36 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   };
 
   /**
+   * Actualiza la rutina de rehabilitación asignada a un paciente.
+   * Solo modifica `rutina_video_url` y `rutina_items` sin recalcular macros ni plan nutricional.
+   */
+  const updatePatientRutina = async (patientId: string, data: { videoUrl?: string; items?: string[] }) => {
+    const existing = getPatientById(patientId);
+    if (!existing) throw new Error('Paciente no encontrado');
+
+    const { error } = await supabase.from('patients').update({
+      rutina_video_url: data.videoUrl || null,
+      rutina_items: data.items && data.items.length > 0 ? data.items : null,
+      updated_at: new Date().toISOString(),
+    }).eq('id', patientId);
+
+    if (error) {
+      console.error('Error actualizando rutina:', error);
+      throw new Error(`Error al guardar la rutina: ${error.message}`);
+    }
+
+    dispatch({
+      type: 'UPDATE_PATIENT',
+      payload: {
+        ...existing,
+        rutinaVideoUrl: data.videoUrl || undefined,
+        rutinaItems: data.items && data.items.length > 0 ? data.items : undefined,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  };
+
+  /**
    * Agrega una prescripción médica (fármaco, suplemento) al plan del paciente.
    * Esta prescripción aparecerá en el "Dashboard" del paciente para su seguimiento diario de adherencia.
    * 
@@ -782,6 +815,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       getSelectedPatient,
       createPatient,
       updatePatient,
+      updatePatientRutina,
       addEvaluation,
       addPrescription,
     }}>

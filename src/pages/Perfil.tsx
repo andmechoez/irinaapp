@@ -5,7 +5,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
-import { HeartPulse, LogOut, Info, FileText, Pill, Activity, TrendingDown, UserCircle, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { HeartPulse, LogOut, Info, FileText, Pill, Activity, TrendingDown, UserCircle, Lock, Eye, EyeOff, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 function WeightChart({ data }: { data: any[] }) {
@@ -66,6 +66,321 @@ function WeightChart({ data }: { data: any[] }) {
         <span>{new Date(validData[validData.length - 1].fecha).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
       </div>
     </div>
+  );
+}
+
+// =============================================
+// Historial Clínico Desplegable — Paciente
+// =============================================
+const PAGE_SIZE = 3;
+
+function HistorialClinico({ consultas }: { consultas: any[] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Ordenar de más reciente a más antiguo
+  const sorted = [...consultas].reverse();
+  const total = sorted.length;
+  const visible = sorted.slice(0, visibleCount);
+  const hasMore = visibleCount < total;
+
+  const handleOpen = () => {
+    setIsOpen(true);
+    setVisibleCount(PAGE_SIZE);
+  };
+
+  const handleCollapse = () => {
+    setIsOpen(false);
+    setVisibleCount(PAGE_SIZE);
+  };
+
+  const handleVerMas = () => {
+    setVisibleCount((c) => Math.min(c + PAGE_SIZE, total));
+  };
+
+  return (
+    <Card className="space-y-0 overflow-hidden">
+      {/* Cabecera — siempre visible */}
+      <button
+        onClick={isOpen ? handleCollapse : handleOpen}
+        className="w-full flex items-center justify-between p-4 group cursor-pointer"
+      >
+        <div className="flex items-center gap-2">
+          <Activity size={18} className="text-salud-blue" />
+          <h2 className="text-base font-bold text-text-primary">Mi Historial Clínico</h2>
+          <span className="text-xs font-bold bg-salud-blue/10 text-salud-blue px-2 py-0.5 rounded-full">
+            {total} {total === 1 ? 'evaluación' : 'evaluaciones'}
+          </span>
+        </div>
+        <div className={`p-1.5 rounded-full bg-bg-elevated border border-border/40 transition-colors group-hover:border-salud-blue/40 group-hover:bg-salud-blue/5`}>
+          {isOpen
+            ? <ChevronUp size={16} className="text-salud-blue" />
+            : <ChevronDown size={16} className="text-text-tertiary group-hover:text-salud-blue transition-colors" />}
+        </div>
+      </button>
+
+      {/* Vista colapsada: preview de la última evaluación */}
+      {!isOpen && (
+        <div
+          onClick={handleOpen}
+          className="mx-4 mb-4 p-3 border border-border/40 rounded-[var(--radius-md)] bg-bg-elevated cursor-pointer hover:border-salud-blue/30 transition-colors group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText size={14} className="text-salud-blue" />
+              <span className="text-sm font-semibold text-text-primary">
+                {total > 1 ? `Consulta más reciente` : 'Evaluación Inicial'}
+              </span>
+            </div>
+            <span className="text-xs text-text-tertiary">
+              {new Date(sorted[0].fecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <div className="flex gap-4 mt-2 text-xs text-text-secondary">
+            <span><span className="font-bold text-text-primary">{sorted[0].pesoKg} kg</span></span>
+            {sorted[0].tallaCm && (
+              <span><span className="font-bold text-text-primary">{sorted[0].tallaCm} cm</span></span>
+            )}
+            {sorted[0].resultados && (
+              <span>IMC <span className="font-bold text-salud-blue">{sorted[0].resultados.imc?.toFixed(1)}</span></span>
+            )}
+          </div>
+          <p className="text-xs text-salud-blue font-semibold mt-2 group-hover:underline">
+            Ver todas las evaluaciones ↓
+          </p>
+        </div>
+      )}
+
+      {/* Lista expandida */}
+      {isOpen && (
+        <div className="px-4 pb-4 space-y-4 animate-fade-in">
+
+          {/* Gráfica de peso */}
+          <WeightChart data={consultas} />
+
+          {/* Botón contraer — superior izquierda */}
+          <button
+            onClick={handleCollapse}
+            className="flex items-center gap-1.5 text-xs font-semibold text-text-tertiary hover:text-salud-blue transition-colors"
+          >
+            <ChevronUp size={14} />
+            Contraer todo
+          </button>
+
+          {/* Tarjetas de evaluación */}
+          <div className="space-y-4">
+            {visible.map((consulta: any, idx: number) => {
+              const isInicial = idx === total - 1;
+              const label = isInicial ? 'Evaluación Inicial' : `Consulta #${total - idx}`;
+              return (
+                <div key={consulta.id || idx} className="bg-bg-elevated p-4 rounded-[var(--radius-md)] space-y-3">
+                  {/* Cabecera de la consulta */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText size={16} className="text-salud-blue" />
+                      <span className="text-sm font-bold text-text-primary">{label}</span>
+                    </div>
+                    <span className="text-xs text-text-tertiary">
+                      {new Date(consulta.fecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </span>
+                  </div>
+
+                  {/* Métricas principales */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-bg-card p-2.5 rounded-lg border border-border/30 text-center">
+                      <span className="text-text-tertiary block text-xs mb-0.5">Peso</span>
+                      <span className="font-extrabold text-text-primary">{consulta.pesoKg} <span className="text-xs font-normal">kg</span></span>
+                    </div>
+                    {consulta.tallaCm && (
+                      <div className="bg-bg-card p-2.5 rounded-lg border border-border/30 text-center">
+                        <span className="text-text-tertiary block text-xs mb-0.5">Estatura</span>
+                        <span className="font-extrabold text-text-primary">{consulta.tallaCm} <span className="text-xs font-normal">cm</span></span>
+                      </div>
+                    )}
+                    {consulta.resultados && (
+                      <div className="bg-bg-card p-2.5 rounded-lg border border-border/30 text-center">
+                        <span className="text-text-tertiary block text-xs mb-0.5">IMC</span>
+                        <span className="font-extrabold text-salud-blue">{consulta.resultados.imc?.toFixed(1)}</span>
+                        {consulta.resultados.clasificacionImc && (
+                          <span className="block text-xs text-text-tertiary">{consulta.resultados.clasificacionImc}</span>
+                        )}
+                      </div>
+                    )}
+                    {(consulta.cinturaCm || consulta.circunferenciaCinturaCm) && (
+                      <div className="bg-bg-card p-2.5 rounded-lg border border-border/30 text-center">
+                        <span className="text-text-tertiary block text-xs mb-0.5">Cintura</span>
+                        <span className="font-bold text-text-primary">{consulta.cinturaCm || consulta.circunferenciaCinturaCm} <span className="text-xs font-normal">cm</span></span>
+                      </div>
+                    )}
+                    {(consulta.caderaCm || consulta.circunferenciaCaderaCm) && (
+                      <div className="bg-bg-card p-2.5 rounded-lg border border-border/30 text-center">
+                        <span className="text-text-tertiary block text-xs mb-0.5">Cadera</span>
+                        <span className="font-bold text-text-primary">{consulta.caderaCm || consulta.circunferenciaCaderaCm} <span className="text-xs font-normal">cm</span></span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Composición Corporal */}
+                  {consulta.composicionCorporal && Object.values(consulta.composicionCorporal).some((v: any) => v !== undefined) && (
+                    <div className="bg-bg-card p-3 rounded-lg border border-border/30">
+                      <p className="text-xs font-bold text-text-primary mb-2 flex items-center gap-1.5">⚡ Composición Corporal</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                        {consulta.composicionCorporal.porcentajeGrasa !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">% Grasa</span>
+                            <span className="font-bold text-salud-amber">{consulta.composicionCorporal.porcentajeGrasa}%</span>
+                          </div>
+                        )}
+                        {consulta.composicionCorporal.grasaVisceral !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">Grasa Visceral</span>
+                            <span className="font-bold text-salud-red">Niv. {consulta.composicionCorporal.grasaVisceral}</span>
+                          </div>
+                        )}
+                        {consulta.composicionCorporal.musculoEsqueletico !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">% Músculo</span>
+                            <span className="font-bold text-salud-green">{consulta.composicionCorporal.musculoEsqueletico}%</span>
+                          </div>
+                        )}
+                        {consulta.composicionCorporal.musculoEsqueleticoKg !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">Músculo (kg)</span>
+                            <span className="font-bold text-text-primary">{consulta.composicionCorporal.musculoEsqueleticoKg} kg</span>
+                          </div>
+                        )}
+                        {consulta.composicionCorporal.aguaCorporal !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">Agua Corporal</span>
+                            <span className="font-bold text-salud-blue">{consulta.composicionCorporal.aguaCorporal}%</span>
+                          </div>
+                        )}
+                        {consulta.composicionCorporal.edadMetabolica !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">Edad Metabólica</span>
+                            <span className="font-bold text-text-primary">{consulta.composicionCorporal.edadMetabolica} años</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Laboratorios */}
+                  {consulta.laboratorios && (consulta.laboratorios.glucosa || consulta.laboratorios.presionArterial || consulta.laboratorios.homaIr) && (
+                    <div className="space-y-2">
+                      {consulta.laboratorios.homaIr && (
+                        <div className="bg-salud-red-soft/40 border border-salud-red/20 p-2.5 rounded-lg flex items-center justify-between">
+                          <span className="text-xs font-bold text-salud-red flex items-center gap-1.5">🩺 Resistencia a la Insulina (HOMA-IR)</span>
+                          <span className="text-sm font-extrabold text-salud-red">{consulta.laboratorios.homaIr}</span>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        {consulta.laboratorios.glucosa && (
+                          <div className="flex-1 min-w-[120px] bg-bg-card p-2.5 rounded-lg border border-border/30 text-center">
+                            <span className="text-text-tertiary block text-xs mb-0.5">Glucosa</span>
+                            <span className="font-bold text-text-primary text-sm">{consulta.laboratorios.glucosa} <span className="text-xs font-normal">mg/dL</span></span>
+                          </div>
+                        )}
+                        {consulta.laboratorios.presionArterial && (
+                          <div className="flex-1 min-w-[120px] bg-bg-card p-2.5 rounded-lg border border-border/30 text-center">
+                            <span className="text-text-tertiary block text-xs mb-0.5">Presión Arterial</span>
+                            <span className="font-bold text-text-primary text-sm">{consulta.laboratorios.presionArterial}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Resultados Metabólicos */}
+                  {consulta.resultados && (consulta.resultados.tmb || consulta.resultados.get) && (
+                    <div className="bg-bg-card p-3 rounded-lg border border-border/30">
+                      <p className="text-xs font-bold text-text-primary mb-2">📊 Tu Gasto Energético</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {consulta.resultados.tmb && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">Metabolismo Basal</span>
+                            <span className="font-bold text-salud-blue">{Math.round(consulta.resultados.tmb)} kcal</span>
+                          </div>
+                        )}
+                        {consulta.resultados.get && (
+                          <div className="flex justify-between">
+                            <span className="text-text-tertiary">Gasto Total (GET)</span>
+                            <span className="font-bold text-salud-green">{Math.round(consulta.resultados.get)} kcal</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bienestar */}
+                  {(consulta.nivelEnergia !== undefined || consulta.calidadDigestion || consulta.nivelAnsiedad) && (
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {consulta.nivelEnergia !== undefined && (
+                        <div className="flex items-center gap-1 bg-salud-green-soft/50 px-2.5 py-1 rounded-full border border-salud-green/20">
+                          <span className="text-text-tertiary">Energía:</span>
+                          <span className="font-bold text-salud-green">{consulta.nivelEnergia}/10</span>
+                        </div>
+                      )}
+                      {consulta.calidadDigestion && (
+                        <div className="flex items-center gap-1 bg-bg-card px-2.5 py-1 rounded-full border border-border/30">
+                          <span className="text-text-tertiary">Digestión:</span>
+                          <span className="font-semibold text-text-primary capitalize">{consulta.calidadDigestion}</span>
+                        </div>
+                      )}
+                      {consulta.nivelAnsiedad && (
+                        <div className="flex items-center gap-1 bg-bg-card px-2.5 py-1 rounded-full border border-border/30">
+                          <span className="text-text-tertiary">Ansiedad:</span>
+                          <span className="font-semibold text-text-primary capitalize">{consulta.nivelAnsiedad}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Indicaciones médicas */}
+                  {consulta.indicacionesPaciente && (
+                    <div className="bg-salud-green-soft/30 border border-salud-green/25 p-3 rounded-[var(--radius-md)]">
+                      <p className="text-xs font-bold text-salud-green mb-1.5">💬 Recomendaciones de tu médico:</p>
+                      <p className="text-sm text-text-primary whitespace-pre-wrap">{consulta.indicacionesPaciente}</p>
+                    </div>
+                  )}
+
+                  {consulta.indicacionesPaciente && consulta.indicacionesPaciente.toLowerCase().includes('receta') && (
+                    <div className="flex items-center gap-1.5 text-salud-purple text-xs font-bold">
+                      <Pill size={14} /> Tienes una nueva receta médica
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Controles inferiores */}
+          <div className="space-y-2">
+            {/* Ver más — centrado */}
+            {hasMore && (
+              <div className="flex justify-center">
+                <button
+                  onClick={handleVerMas}
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-full border border-salud-blue/30 bg-salud-blue/5 text-salud-blue text-xs font-bold hover:bg-salud-blue/10 hover:border-salud-blue/50 transition-all"
+                >
+                  <ChevronDown size={14} />
+                  Ver más evaluaciones ({total - visibleCount} restantes)
+                </button>
+              </div>
+            )}
+
+            {/* Contraer todo — izquierda */}
+            <button
+              onClick={handleCollapse}
+              className="flex items-center gap-1.5 text-xs font-semibold text-text-tertiary hover:text-salud-blue transition-colors"
+            >
+              <ChevronUp size={14} />
+              Contraer todo
+            </button>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -316,79 +631,9 @@ export default function Perfil() {
 
       {/* Historial de Consultas */}
       {patientState.historialConsultas && patientState.historialConsultas.length > 0 && (
-        <Card className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-border/50 pb-2 mb-4">
-            <Activity size={18} className="text-salud-blue" />
-            <h2 className="text-base font-bold text-text-primary">Mi Historial Clínico</h2>
-          </div>
-          
-          <WeightChart data={patientState.historialConsultas} />
-          
-          <div className="space-y-4">
-            {patientState.historialConsultas.slice().reverse().map((consulta: any, idx: number) => (
-              <div key={consulta.id || idx} className="bg-bg-elevated p-4 rounded-[var(--radius-md)] space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText size={16} className="text-salud-blue" />
-                    <span className="text-sm font-bold text-text-primary">
-                      {idx === patientState.historialConsultas.length - 1 ? 'Evaluación Inicial' : `Consulta #${patientState.historialConsultas.length - idx}`}
-                    </span>
-                  </div>
-                  <span className="text-xs text-text-tertiary">
-                    {new Date(consulta.fecha).toLocaleDateString()}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-4 text-sm border-y border-border/40 py-2">
-                  <div>
-                    <span className="text-text-tertiary block text-xs">Peso</span>
-                    <span className="font-bold">{consulta.pesoKg} kg</span>
-                  </div>
-                  {consulta.resultados && (
-                    <div>
-                      <span className="text-text-tertiary block text-xs">IMC</span>
-                      <span className="font-bold text-salud-blue">{consulta.resultados.imc.toFixed(1)}</span>
-                    </div>
-                  )}
-                  {consulta.composicionCorporal?.porcentajeGrasa && (
-                    <div>
-                      <span className="text-text-tertiary block text-xs">% Grasa</span>
-                      <span className="font-bold text-salud-amber">{consulta.composicionCorporal.porcentajeGrasa}%</span>
-                    </div>
-                  )}
-                  {consulta.composicionCorporal?.musculoEsqueletico && (
-                    <div>
-                      <span className="text-text-tertiary block text-xs">% Músculo</span>
-                      <span className="font-bold text-salud-green">{consulta.composicionCorporal.musculoEsqueletico}%</span>
-                    </div>
-                  )}
-                  {consulta.laboratorios?.homaIr && (
-                    <div>
-                      <span className="text-text-tertiary block text-xs">HOMA-IR</span>
-                      <span className="font-bold text-salud-red">{consulta.laboratorios.homaIr}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Indicaciones Médicas */}
-                {consulta.indicacionesPaciente && (
-                  <div className="bg-bg-elevated border border-border/40 p-3 rounded-[var(--radius-md)]">
-                    <p className="text-xs font-bold text-salud-green mb-1">Recomendaciones de tu médico:</p>
-                    <p className="text-sm text-text-primary whitespace-pre-wrap">{consulta.indicacionesPaciente}</p>
-                  </div>
-                )}
-                
-                {/* Check if prescriptions were given during this evaluation (mock indicator) */}
-                {consulta.indicacionesPaciente && consulta.indicacionesPaciente.toLowerCase().includes('receta') && (
-                  <div className="flex items-center gap-1.5 mt-2 text-salud-purple text-xs font-bold">
-                    <Pill size={14} /> Tienes una nueva receta médica
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
+        <HistorialClinico consultas={patientState.historialConsultas} />
       )}
+
 
       <div className="flex flex-col gap-3">
         <Button

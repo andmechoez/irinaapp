@@ -51,6 +51,10 @@ export interface Patient {
   // Resultados metabólicos actuales
   resultadosActuales?: ResultadosMetabolicos;
   
+  // Rutina de Rehabilitación asignada por el equipo médico
+  rutinaVideoUrl?: string;   // URL de YouTube configurada por el nutricionista
+  rutinaItems?: string[];    // Lista de pasos/ejercicios de la rutina
+  
   // Metadata
   totalEvaluaciones: number;
   ultimaEvaluacion?: string; // ISO date

@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { 
   ArrowLeft, Edit, FileText, Activity, AlertTriangle, 
-  Calendar, Scale, Droplets, Target, User, HeartPulse, Pill, TrendingUp, Table
+  Calendar, Scale, Droplets, Target, User, HeartPulse, Pill, TrendingUp, Table,
+  PlayCircle, Plus, Trash2, Video
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useStaff } from '../../contexts/StaffContext';
@@ -25,7 +26,7 @@ import type { Evaluacion } from '../../types/patients';
 export default function PatientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPatientById, addPrescription, getPatientEvaluations, dispatch } = useStaff();
+  const { getPatientById, addPrescription, getPatientEvaluations, updatePatientRutina, dispatch } = useStaff();
   
   const patient = id ? getPatientById(id) : undefined;
   const evaluations = patient ? getPatientEvaluations(patient.id) : [];
@@ -55,6 +56,15 @@ export default function PatientDetail() {
     alertaHidratacion: false,
   });
   const [planSaving, setPlanSaving] = useState(false);
+
+  // Estado para el modal de rutina
+  const [showRutinaModal, setShowRutinaModal] = useState(false);
+  const [rutinaForm, setRutinaForm] = useState({
+    videoUrl: '',
+    items: [] as string[],
+    newItem: '',
+  });
+  const [rutinaSaving, setRutinaSaving] = useState(false);
 
   const [patientState, setPatientState] = useState<any>({ diario: {}, prescripciones: [] });
 
@@ -505,16 +515,16 @@ export default function PatientDetail() {
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="p-3 border border-border/60 rounded-[var(--radius-md)] text-center">
-                      <p className="text-lg font-bold text-salud-blue">{patient.resultadosActuales.macros.proteinas.gramos.toFixed(0)}g</p>
-                      <p className="text-xs font-semibold text-text-secondary mt-0.5">Proteína ({patient.resultadosActuales.macros.proteinas.porcentaje}%)</p>
+                      <p className="text-lg font-bold text-salud-blue">{Math.round(patient.resultadosActuales.macros.proteinas.gramos)}g</p>
+                      <p className="text-xs font-semibold text-text-secondary mt-0.5">Proteína ({Math.round(patient.resultadosActuales.macros.proteinas.porcentaje)}%)</p>
                     </div>
                     <div className="p-3 border border-border/60 rounded-[var(--radius-md)] text-center">
-                      <p className="text-lg font-bold text-salud-amber">{patient.resultadosActuales.macros.carbohidratos.gramos.toFixed(0)}g</p>
-                      <p className="text-xs font-semibold text-text-secondary mt-0.5">Carbos ({patient.resultadosActuales.macros.carbohidratos.porcentaje}%)</p>
+                      <p className="text-lg font-bold text-salud-amber">{Math.round(patient.resultadosActuales.macros.carbohidratos.gramos)}g</p>
+                      <p className="text-xs font-semibold text-text-secondary mt-0.5">Carbos ({Math.round(patient.resultadosActuales.macros.carbohidratos.porcentaje)}%)</p>
                     </div>
                     <div className="p-3 border border-border/60 rounded-[var(--radius-md)] text-center">
-                      <p className="text-lg font-bold text-text-primary">{patient.resultadosActuales.macros.grasas.gramos.toFixed(0)}g</p>
-                      <p className="text-xs font-semibold text-text-secondary mt-0.5">Grasas ({patient.resultadosActuales.macros.grasas.porcentaje}%)</p>
+                      <p className="text-lg font-bold text-text-primary">{Math.round(patient.resultadosActuales.macros.grasas.gramos)}g</p>
+                      <p className="text-xs font-semibold text-text-secondary mt-0.5">Grasas ({Math.round(patient.resultadosActuales.macros.grasas.porcentaje)}%)</p>
                     </div>
                   </div>
 
@@ -526,6 +536,64 @@ export default function PatientDetail() {
                         <p className="text-xs text-salud-amber font-semibold mt-0.5">Alerta de restricción hídrica activada</p>
                       )}
                     </div>
+                  </div>
+
+                  {/* ── Rutina de Rehabilitación ── */}
+                  <div className="pt-4 border-t border-border/40">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <PlayCircle size={18} className="text-salud-purple" />
+                        <h3 className="text-sm font-bold text-text-primary">Rutina de Rehabilitación</h3>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          setRutinaForm({
+                            videoUrl: patient.rutinaVideoUrl || '',
+                            items: patient.rutinaItems ? [...patient.rutinaItems] : [],
+                            newItem: '',
+                          });
+                          setShowRutinaModal(true);
+                        }}
+                      >
+                        {patient.rutinaVideoUrl || (patient.rutinaItems && patient.rutinaItems.length > 0)
+                          ? 'Editar Rutina'
+                          : 'Asignar Rutina'}
+                      </Button>
+                    </div>
+
+                    {patient.rutinaVideoUrl || (patient.rutinaItems && patient.rutinaItems.length > 0) ? (
+                      <div className="space-y-2">
+                        {/* Items */}
+                        {patient.rutinaItems && patient.rutinaItems.length > 0 && (
+                          <ul className="space-y-1.5">
+                            {patient.rutinaItems.map((item, i) => (
+                              <li key={i} className="flex items-start gap-2 text-xs text-text-secondary">
+                                <span className="mt-0.5 w-4 h-4 rounded-full bg-salud-purple/10 text-salud-purple flex items-center justify-center flex-shrink-0 font-bold text-[10px]">
+                                  {i + 1}
+                                </span>
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {/* Video URL */}
+                        {patient.rutinaVideoUrl && (
+                          <a
+                            href={patient.rutinaVideoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-salud-blue font-semibold hover:underline mt-1"
+                          >
+                            <Video size={13} />
+                            Ver video asignado
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-text-tertiary italic">Sin rutina asignada. Usa el botón para agregar una.</p>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -971,65 +1039,460 @@ export default function PatientDetail() {
         </div>
       )}
 
+      {/* ── Modal Rutina de Rehabilitación ── */}
+      {showRutinaModal && (
+        <div className="fixed inset-0 bg-bg-primary/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-bg-card border border-border/60 rounded-[var(--radius-lg)] shadow-xl w-full max-w-md max-h-[90vh] flex flex-col animate-slide-up">
+            {/* Header */}
+            <div className="p-5 border-b border-border/60 flex items-center justify-between shrink-0">
+              <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                <PlayCircle size={18} className="text-salud-purple" />
+                Rutina de Rehabilitación
+              </h3>
+              <button
+                onClick={() => {
+                  setShowRutinaModal(false);
+                  setRutinaSaving(false);
+                }}
+                className="p-1.5 rounded-full text-text-tertiary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-5 overflow-y-auto flex-1">
+              {/* URL de YouTube */}
+              <div>
+                <label className="block text-sm font-semibold text-text-secondary mb-1.5 flex items-center gap-1.5">
+                  <Video size={14} /> Link de video (YouTube u otro)
+                </label>
+                <Input
+                  type="url"
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={rutinaForm.videoUrl}
+                  onChange={e => setRutinaForm(f => ({ ...f, videoUrl: e.target.value }))}
+                />
+                <p className="text-xs text-text-tertiary mt-1">
+                  El paciente verá un botón "Ver Guía en Video" que abrirá este enlace.
+                </p>
+              </div>
+
+              {/* Lista de ítems */}
+              <div>
+                <label className="block text-sm font-semibold text-text-secondary mb-2">
+                  Pasos / Ejercicios de la rutina
+                </label>
+
+                {rutinaForm.items.length > 0 && (
+                  <ul className="space-y-2 mb-3">
+                    {rutinaForm.items.map((item, i) => (
+                      <li key={i} className="flex items-center gap-2 bg-bg-elevated rounded-[var(--radius-md)] px-3 py-2 border border-border/40">
+                        <span className="w-5 h-5 rounded-full bg-salud-purple/10 text-salud-purple flex items-center justify-center flex-shrink-0 font-bold text-[10px]">
+                          {i + 1}
+                        </span>
+                        <span className="flex-1 text-sm text-text-primary">{item}</span>
+                        <button
+                          onClick={() => setRutinaForm(f => ({
+                            ...f,
+                            items: f.items.filter((_, idx) => idx !== i)
+                          }))}
+                          className="text-text-tertiary hover:text-salud-red transition-colors cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Agregar nuevo ítem */}
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Ej: 10 sentadillas lentas con apoyo"
+                    value={rutinaForm.newItem}
+                    onChange={e => setRutinaForm(f => ({ ...f, newItem: e.target.value }))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && rutinaForm.newItem.trim()) {
+                        e.preventDefault();
+                        setRutinaForm(f => ({
+                          ...f,
+                          items: [...f.items, f.newItem.trim()],
+                          newItem: '',
+                        }));
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (!rutinaForm.newItem.trim()) return;
+                      setRutinaForm(f => ({
+                        ...f,
+                        items: [...f.items, f.newItem.trim()],
+                        newItem: '',
+                      }));
+                    }}
+                    className="p-2 rounded-[var(--radius-md)] bg-salud-purple/10 text-salud-purple hover:bg-salud-purple/20 transition-colors cursor-pointer flex-shrink-0"
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+                <p className="text-xs text-text-tertiary mt-1">
+                  Presiona Enter o el botón + para agregar cada paso.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border/60 bg-bg-elevated/30 flex items-center justify-between gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={rutinaSaving}
+                onClick={async () => {
+                  setRutinaSaving(true);
+                  try {
+                    await updatePatientRutina(patient.id, { videoUrl: undefined, items: undefined });
+                    setShowRutinaModal(false);
+                  } catch (err) {
+                    console.error('Error quitando rutina:', err);
+                    alert('Error al quitar la rutina. Intenta de nuevo.');
+                  } finally {
+                    setRutinaSaving(false);
+                  }
+                }}
+                className="text-salud-red hover:text-salud-red"
+              >
+                {rutinaSaving ? '...' : 'Quitar rutina'}
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowRutinaModal(false);
+                    setRutinaSaving(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={rutinaSaving || (!rutinaForm.videoUrl && rutinaForm.items.length === 0)}
+                  onClick={async () => {
+                    setRutinaSaving(true);
+                    try {
+                      await updatePatientRutina(patient.id, {
+                        videoUrl: rutinaForm.videoUrl || undefined,
+                        items: rutinaForm.items.length > 0 ? rutinaForm.items : undefined,
+                      });
+                      setShowRutinaModal(false);
+                    } catch (err) {
+                      console.error('Error guardando rutina:', err);
+                      alert('Error al guardar la rutina. Intenta de nuevo.');
+                    } finally {
+                      setRutinaSaving(false);
+                    }
+                  }}
+                >
+                  {rutinaSaving ? 'Guardando…' : 'Guardar Rutina'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SlideOver Evaluacion */}
       <SlideOver
         isOpen={!!selectedEvaluation}
         onClose={() => setSelectedEvaluation(null)}
         title={selectedEvaluation ? `Detalle de Evaluación` : ''}
-        width="max-w-md"
+        width="max-w-xl"
       >
         {selectedEvaluation && (
-          <div className="space-y-6 pb-8 mt-2">
+          <div className="space-y-6 pb-10 mt-2">
+
+            {/* Cabecera: Fecha y evaluador */}
+            <div className="flex items-center justify-between p-3 bg-bg-elevated rounded-[var(--radius-md)] border border-border/40">
+              <div>
+                <p className="text-xs text-text-tertiary font-bold uppercase">Fecha de Evaluación</p>
+                <p className="text-base font-bold text-text-primary mt-0.5">
+                  {new Date(selectedEvaluation.fecha).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
+              {selectedEvaluation.evaluadorNombre && (
+                <div className="text-right">
+                  <p className="text-xs text-text-tertiary font-bold uppercase">Evaluador</p>
+                  <p className="text-sm font-semibold text-text-primary mt-0.5">{selectedEvaluation.evaluadorNombre}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sección 1: Antropometría */}
             <div>
-              <p className="text-xs text-text-tertiary font-bold uppercase mb-1">Fecha</p>
-              <p className="text-base font-semibold text-text-primary">{new Date(selectedEvaluation.fecha).toLocaleDateString()}</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
-                <p className="text-xs text-text-secondary mb-1">Peso</p>
-                <p className="text-lg font-bold text-text-primary">{selectedEvaluation.pesoKg} kg</p>
-              </div>
-              <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
-                <p className="text-xs text-text-secondary mb-1">IMC</p>
-                <p className="text-lg font-bold text-salud-blue">{selectedEvaluation.resultados?.imc?.toFixed(1) || '—'}</p>
-              </div>
-              <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
-                <p className="text-xs text-text-secondary mb-1">Cintura</p>
-                <p className="text-lg font-bold text-text-primary">{selectedEvaluation.cinturaCm} cm</p>
-              </div>
-              <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
-                <p className="text-xs text-text-secondary mb-1">Cadera</p>
-                <p className="text-lg font-bold text-text-primary">{selectedEvaluation.caderaCm} cm</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-text-tertiary font-bold uppercase mb-1">Notas Privadas del Profesional</p>
-                <div className="p-3 bg-bg-card rounded-lg border border-border/40 text-sm text-text-secondary min-h-[80px]">
-                  {selectedEvaluation.notasProfesional || 'Sin notas registradas en esta evaluación.'}
+              <p className="text-xs text-text-tertiary font-bold uppercase mb-3 flex items-center gap-1.5">
+                <Scale size={12} /> Antropometría
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                  <p className="text-xs text-text-secondary mb-0.5">Peso</p>
+                  <p className="text-xl font-extrabold text-text-primary">{selectedEvaluation.pesoKg} <span className="text-sm font-normal">kg</span></p>
                 </div>
-              </div>
-
-              <div>
-                <p className="text-xs text-salud-green font-bold uppercase mb-1">Indicaciones al Paciente</p>
-                <div className="p-3 bg-bg-elevated rounded-[var(--radius-md)] border border-border/40 text-sm text-text-secondary min-h-[80px]">
-                  {selectedEvaluation.indicacionesPaciente || 'Sin indicaciones adicionales registradas.'}
+                <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                  <p className="text-xs text-text-secondary mb-0.5">Talla</p>
+                  <p className="text-xl font-extrabold text-text-primary">{selectedEvaluation.tallaCm} <span className="text-sm font-normal">cm</span></p>
+                </div>
+                <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                  <p className="text-xs text-text-secondary mb-0.5">IMC</p>
+                  <p className="text-xl font-extrabold text-salud-blue">{selectedEvaluation.resultados?.imc?.toFixed(1) || '—'}</p>
+                  {selectedEvaluation.resultados?.clasificacionImc && (
+                    <p className="text-xs text-text-tertiary mt-0.5">{selectedEvaluation.resultados.clasificacionImc}</p>
+                  )}
+                </div>
+                <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                  <p className="text-xs text-text-secondary mb-0.5">Cintura / Cadera</p>
+                  <p className="text-base font-bold text-text-primary">{selectedEvaluation.cinturaCm} / {selectedEvaluation.caderaCm} <span className="text-xs font-normal">cm</span></p>
                 </div>
               </div>
             </div>
-            
-            {selectedEvaluation.nivelEnergia !== undefined && (
-              <div className="pt-4 border-t border-border/40">
-                <h4 className="text-sm font-bold text-text-primary mb-3">Feedback del Paciente</h4>
-                <div className="space-y-2 text-sm text-text-secondary">
-                  <p><span className="font-semibold">Nivel de Energía:</span> {selectedEvaluation.nivelEnergia} / 10</p>
-                  <p><span className="font-semibold">Digestión:</span> <span className="capitalize">{selectedEvaluation.calidadDigestion}</span></p>
-                  <p><span className="font-semibold">Ansiedad:</span> <span className="capitalize">{selectedEvaluation.nivelAnsiedad}</span></p>
+
+            {/* Sección 2: Composición Corporal */}
+            {selectedEvaluation.composicionCorporal && Object.values(selectedEvaluation.composicionCorporal).some(v => v !== undefined) && (
+              <div>
+                <p className="text-xs text-text-tertiary font-bold uppercase mb-3 flex items-center gap-1.5">
+                  ⚡ Composición Corporal / Bioimpedancia
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {selectedEvaluation.composicionCorporal.porcentajeGrasa !== undefined && (
+                    <div className="bg-salud-amber-soft/40 p-3 rounded-lg border border-salud-amber/20">
+                      <p className="text-xs text-text-secondary mb-0.5">Grasa Corporal</p>
+                      <p className="text-xl font-extrabold text-salud-amber">{selectedEvaluation.composicionCorporal.porcentajeGrasa}<span className="text-sm font-normal">%</span></p>
+                    </div>
+                  )}
+                  {selectedEvaluation.composicionCorporal.grasaVisceral !== undefined && (
+                    <div className="bg-salud-red-soft/40 p-3 rounded-lg border border-salud-red/20">
+                      <p className="text-xs text-text-secondary mb-0.5">Grasa Visceral</p>
+                      <p className="text-xl font-extrabold text-salud-red">Niv. {selectedEvaluation.composicionCorporal.grasaVisceral}</p>
+                    </div>
+                  )}
+                  {selectedEvaluation.composicionCorporal.musculoEsqueletico !== undefined && (
+                    <div className="bg-salud-green-soft/40 p-3 rounded-lg border border-salud-green/20">
+                      <p className="text-xs text-text-secondary mb-0.5">Músculo Esquelético</p>
+                      <p className="text-xl font-extrabold text-salud-green">{selectedEvaluation.composicionCorporal.musculoEsqueletico}<span className="text-sm font-normal">%</span></p>
+                    </div>
+                  )}
+                  {selectedEvaluation.composicionCorporal.musculoEsqueleticoKg !== undefined && (
+                    <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                      <p className="text-xs text-text-secondary mb-0.5">Músculo (kg)</p>
+                      <p className="text-xl font-extrabold text-text-primary">{selectedEvaluation.composicionCorporal.musculoEsqueleticoKg}<span className="text-sm font-normal"> kg</span></p>
+                    </div>
+                  )}
+                  {selectedEvaluation.composicionCorporal.aguaCorporal !== undefined && (
+                    <div className="bg-salud-blue-soft/40 p-3 rounded-lg border border-salud-blue/20">
+                      <p className="text-xs text-text-secondary mb-0.5">Agua Corporal</p>
+                      <p className="text-xl font-extrabold text-salud-blue">{selectedEvaluation.composicionCorporal.aguaCorporal}<span className="text-sm font-normal">%</span></p>
+                    </div>
+                  )}
+                  {selectedEvaluation.composicionCorporal.edadMetabolica !== undefined && (
+                    <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                      <p className="text-xs text-text-secondary mb-0.5">Edad Metabólica</p>
+                      <p className="text-xl font-extrabold text-text-primary">{selectedEvaluation.composicionCorporal.edadMetabolica}<span className="text-sm font-normal"> años</span></p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
+
+            {/* Sección 3: Laboratorios */}
+            {selectedEvaluation.laboratorios && Object.values(selectedEvaluation.laboratorios).some(v => v !== undefined && v !== '') && (
+              <div>
+                <p className="text-xs text-text-tertiary font-bold uppercase mb-3 flex items-center gap-1.5">
+                  <HeartPulse size={12} /> Laboratorios y Signos Vitales
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {selectedEvaluation.laboratorios.glucosa !== undefined && (
+                    <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                      <p className="text-xs text-text-secondary mb-0.5">Glucosa en ayunas</p>
+                      <p className="text-lg font-bold text-text-primary">{selectedEvaluation.laboratorios.glucosa} <span className="text-xs font-normal">mg/dL</span></p>
+                    </div>
+                  )}
+                  {selectedEvaluation.laboratorios.insulina !== undefined && (
+                    <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                      <p className="text-xs text-text-secondary mb-0.5">Insulina basal</p>
+                      <p className="text-lg font-bold text-text-primary">{selectedEvaluation.laboratorios.insulina} <span className="text-xs font-normal">µU/mL</span></p>
+                    </div>
+                  )}
+                  {selectedEvaluation.laboratorios.homaIr !== undefined && (
+                    <div className="col-span-2 bg-salud-red-soft/50 p-3 rounded-lg border border-salud-red/30 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-salud-red font-bold mb-0.5">🩺 HOMA-IR (Resistencia a la Insulina)</p>
+                        <p className="text-xs text-text-secondary">{selectedEvaluation.laboratorios.homaIr < 2.5 ? 'Normal (< 2.5)' : selectedEvaluation.laboratorios.homaIr < 3.8 ? 'Riesgo moderado (2.5–3.8)' : 'Resistencia a la insulina (> 3.8)'}</p>
+                      </div>
+                      <p className="text-2xl font-extrabold text-salud-red">{selectedEvaluation.laboratorios.homaIr}</p>
+                    </div>
+                  )}
+                  {selectedEvaluation.laboratorios.presionArterial && (
+                    <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                      <p className="text-xs text-text-secondary mb-0.5">Presión Arterial</p>
+                      <p className="text-lg font-bold text-text-primary">{selectedEvaluation.laboratorios.presionArterial} <span className="text-xs font-normal">mmHg</span></p>
+                    </div>
+                  )}
+                  {selectedEvaluation.laboratorios.perfilLipidico && (
+                    <div className="col-span-2 bg-bg-elevated p-3 rounded-lg border border-border/40">
+                      <p className="text-xs text-text-secondary mb-0.5">Perfil Lipídico / Colesterol</p>
+                      <p className="text-sm font-semibold text-text-primary">{selectedEvaluation.laboratorios.perfilLipidico}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Sección 4: Resultados Metabólicos */}
+            {selectedEvaluation.resultados && (
+              <div>
+                <p className="text-xs text-text-tertiary font-bold uppercase mb-3 flex items-center gap-1.5">
+                  <Activity size={12} /> Resultados Metabólicos
+                </p>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="bg-salud-blue-soft/40 p-3 rounded-lg border border-salud-blue/20">
+                    <p className="text-xs text-text-secondary mb-0.5">TMB (Basal)</p>
+                    <p className="text-xl font-extrabold text-salud-blue">{Math.round(selectedEvaluation.resultados.tmb)} <span className="text-sm font-normal">kcal</span></p>
+                  </div>
+                  <div className="bg-salud-green-soft/40 p-3 rounded-lg border border-salud-green/20">
+                    <p className="text-xs text-text-secondary mb-0.5">GET (Gasto Total)</p>
+                    <p className="text-xl font-extrabold text-salud-green">{Math.round(selectedEvaluation.resultados.get)} <span className="text-sm font-normal">kcal</span></p>
+                  </div>
+                  <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                    <p className="text-xs text-text-secondary mb-0.5">Meta Hidratación</p>
+                    <p className="text-lg font-bold text-text-primary">{selectedEvaluation.resultados.metaHidratacionMl} <span className="text-xs font-normal">mL</span></p>
+                  </div>
+                  <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                    <p className="text-xs text-text-secondary mb-0.5">Calorías Plan</p>
+                    <p className="text-lg font-bold text-text-primary">{Math.round(selectedEvaluation.resultados.macros?.totalKcal ?? 0)} <span className="text-xs font-normal">kcal</span></p>
+                  </div>
+                </div>
+                {selectedEvaluation.resultados.macros && (
+                  <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                    <p className="text-xs text-text-secondary font-bold mb-2">Distribución de Macros</p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-xs text-text-tertiary">Proteínas</p>
+                        <p className="text-sm font-extrabold text-salud-blue">{Math.round(selectedEvaluation.resultados.macros.proteinas?.gramos ?? 0)}g</p>
+                        <p className="text-xs text-text-tertiary">{Math.round(selectedEvaluation.resultados.macros.proteinas?.porcentaje ?? 0)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-text-tertiary">Grasas</p>
+                        <p className="text-sm font-extrabold text-salud-amber">{Math.round(selectedEvaluation.resultados.macros.grasas?.gramos ?? 0)}g</p>
+                        <p className="text-xs text-text-tertiary">{Math.round(selectedEvaluation.resultados.macros.grasas?.porcentaje ?? 0)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-text-tertiary">Carbohidratos</p>
+                        <p className="text-sm font-extrabold text-salud-green">{Math.round(selectedEvaluation.resultados.macros.carbohidratos?.gramos ?? 0)}g</p>
+                        <p className="text-xs text-text-tertiary">{Math.round(selectedEvaluation.resultados.macros.carbohidratos?.porcentaje ?? 0)}%</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sección 5: Plan y Estilo de Vida */}
+            <div>
+              <p className="text-xs text-text-tertiary font-bold uppercase mb-3 flex items-center gap-1.5">
+                <Target size={12} /> Plan Clínico
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                  <p className="text-xs text-text-secondary mb-0.5">Objetivo</p>
+                  <p className="text-sm font-bold text-text-primary capitalize">{selectedEvaluation.objetivo}</p>
+                </div>
+                <div className="bg-bg-elevated p-3 rounded-lg border border-border/40">
+                  <p className="text-xs text-text-secondary mb-0.5">Nivel Actividad</p>
+                  <p className="text-sm font-bold text-text-primary">
+                    {selectedEvaluation.nivelActividad === 1 ? 'Sedentario' :
+                     selectedEvaluation.nivelActividad === 2 ? 'Ligero' :
+                     selectedEvaluation.nivelActividad === 3 ? 'Moderado' :
+                     selectedEvaluation.nivelActividad === 4 ? 'Activo' : 'Muy Activo'}
+                  </p>
+                </div>
+                {selectedEvaluation.motivacion && (
+                  <div className="col-span-2 bg-bg-elevated p-3 rounded-lg border border-border/40">
+                    <p className="text-xs text-text-secondary mb-0.5">Motivación del Paciente</p>
+                    <p className="text-sm text-text-primary">{selectedEvaluation.motivacion}</p>
+                  </div>
+                )}
+                {selectedEvaluation.medicamentosActuales && (
+                  <div className="col-span-2 bg-bg-elevated p-3 rounded-lg border border-border/40">
+                    <p className="text-xs text-text-secondary mb-0.5 flex items-center gap-1"><Pill size={10}/> Medicamentos Actuales</p>
+                    <p className="text-sm text-text-primary">{selectedEvaluation.medicamentosActuales}</p>
+                  </div>
+                )}
+                {selectedEvaluation.restriccionesFisicas && selectedEvaluation.restriccionesFisicas.length > 0 && (
+                  <div className="col-span-2 bg-salud-amber-soft/40 p-3 rounded-lg border border-salud-amber/20">
+                    <p className="text-xs text-salud-amber font-bold mb-1.5">⚠ Restricciones Físicas</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedEvaluation.restriccionesFisicas.map((r, i) => (
+                        <span key={i} className="text-xs bg-salud-amber-soft text-salud-amber px-2 py-0.5 rounded-full font-semibold">{r}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="col-span-2 bg-bg-elevated p-3 rounded-lg border border-border/40 flex items-center justify-between">
+                  <p className="text-xs text-text-secondary">Apoyo Familiar</p>
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${selectedEvaluation.apoyoFamiliar ? 'bg-salud-green-soft text-salud-green' : 'bg-salud-red-soft text-salud-red'}`}>
+                    {selectedEvaluation.apoyoFamiliar ? '✓ Sí' : '✗ No'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sección 6: Feedback de Anamnesis */}
+            {selectedEvaluation.nivelEnergia !== undefined && (
+              <div>
+                <p className="text-xs text-text-tertiary font-bold uppercase mb-3 flex items-center gap-1.5">
+                  <User size={12} /> Feedback del Paciente
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-bg-elevated p-3 rounded-lg border border-border/40 text-center">
+                    <p className="text-xs text-text-secondary mb-1">Energía</p>
+                    <p className="text-xl font-extrabold text-salud-green">{selectedEvaluation.nivelEnergia}<span className="text-xs font-normal">/10</span></p>
+                  </div>
+                  <div className="bg-bg-elevated p-3 rounded-lg border border-border/40 text-center">
+                    <p className="text-xs text-text-secondary mb-1">Digestión</p>
+                    <p className="text-sm font-bold text-text-primary capitalize">{selectedEvaluation.calidadDigestion || '—'}</p>
+                  </div>
+                  <div className="bg-bg-elevated p-3 rounded-lg border border-border/40 text-center">
+                    <p className="text-xs text-text-secondary mb-1">Ansiedad</p>
+                    <p className="text-sm font-bold text-text-primary capitalize">{selectedEvaluation.nivelAnsiedad || '—'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sección 7: Notas e Indicaciones */}
+            <div>
+              <p className="text-xs text-text-tertiary font-bold uppercase mb-3 flex items-center gap-1.5">
+                <FileText size={12} /> Notas e Indicaciones
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-text-tertiary font-bold uppercase mb-1">🔒 Notas Clínicas (Privadas)</p>
+                  <div className="p-3 bg-bg-card rounded-lg border border-border/40 text-sm text-text-secondary min-h-[70px] whitespace-pre-wrap">
+                    {selectedEvaluation.notasProfesional || 'Sin notas registradas en esta evaluación.'}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-salud-green font-bold uppercase mb-1">💬 Indicaciones al Paciente (Visibles)</p>
+                  <div className="p-3 bg-salud-green-soft/30 rounded-[var(--radius-md)] border border-salud-green/30 text-sm text-text-secondary min-h-[70px] whitespace-pre-wrap">
+                    {selectedEvaluation.indicacionesPaciente || 'Sin indicaciones adicionales registradas.'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </SlideOver>
