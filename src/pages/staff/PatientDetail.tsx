@@ -931,63 +931,66 @@ export default function PatientDetail() {
               <div className="space-y-3">
                 {/* Proteína */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-salud-blue w-24 shrink-0">Proteína (%)</span>
+                  <span className="text-xs font-bold text-salud-blue w-24 shrink-0">Proteína (g)</span>
                   <input
-                    type="range" min={10} max={50} step={1}
-                    value={planForm.pctProteina}
+                    type="number" min={0} step={1}
+                    value={Math.round((planForm.get * planForm.pctProteina / 100) / 4)}
                     onChange={e => {
-                      const val = Number(e.target.value);
-                      const remaining = 100 - val - planForm.pctGrasa;
-                      setPlanForm(f => ({ ...f, pctProteina: val, pctCarbs: Math.max(0, remaining) }));
+                      const g = Number(e.target.value);
+                      const pct = planForm.get > 0 ? (g * 4 / planForm.get) * 100 : 0;
+                      const remaining = 100 - pct - planForm.pctGrasa;
+                      setPlanForm(f => ({ ...f, pctProteina: pct, pctCarbs: remaining }));
                     }}
-                    className="flex-1 accent-salud-blue"
+                    className="flex-1 max-w-[140px] bg-bg-elevated border border-border/60 rounded-[var(--radius-md)] px-3 py-1.5 text-sm font-semibold text-text-primary outline-none focus:border-salud-blue transition-colors"
                   />
-                  <span className="text-sm font-bold text-salud-blue w-10 text-right">{planForm.pctProteina}%</span>
-                  <span className="text-xs text-text-tertiary w-16 text-right">
-                    {Math.round((planForm.get * planForm.pctProteina / 100) / 4)}g
+                  <div className="flex-1" />
+                  <span className="text-sm font-bold text-salud-blue w-16 text-right">
+                    {Math.round(planForm.pctProteina)}%
                   </span>
                 </div>
                 {/* Grasas */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-text-primary w-24 shrink-0">Grasas (%)</span>
+                  <span className="text-xs font-bold text-text-primary w-24 shrink-0">Grasas (g)</span>
                   <input
-                    type="range" min={10} max={45} step={1}
-                    value={planForm.pctGrasa}
+                    type="number" min={0} step={1}
+                    value={Math.round((planForm.get * planForm.pctGrasa / 100) / 9)}
                     onChange={e => {
-                      const val = Number(e.target.value);
-                      const remaining = 100 - val - planForm.pctProteina;
-                      setPlanForm(f => ({ ...f, pctGrasa: val, pctCarbs: Math.max(0, remaining) }));
+                      const g = Number(e.target.value);
+                      const pct = planForm.get > 0 ? (g * 9 / planForm.get) * 100 : 0;
+                      const remaining = 100 - pct - planForm.pctProteina;
+                      setPlanForm(f => ({ ...f, pctGrasa: pct, pctCarbs: remaining }));
                     }}
-                    className="flex-1 accent-gray-500"
+                    className="flex-1 max-w-[140px] bg-bg-elevated border border-border/60 rounded-[var(--radius-md)] px-3 py-1.5 text-sm font-semibold text-text-primary outline-none focus:border-salud-blue transition-colors"
                   />
-                  <span className="text-sm font-bold text-text-primary w-10 text-right">{planForm.pctGrasa}%</span>
-                  <span className="text-xs text-text-tertiary w-16 text-right">
-                    {Math.round((planForm.get * planForm.pctGrasa / 100) / 9)}g
+                  <div className="flex-1" />
+                  <span className="text-sm font-bold text-text-primary w-16 text-right">
+                    {Math.round(planForm.pctGrasa)}%
                   </span>
                 </div>
                 {/* Carbohidratos (calculado) */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-salud-amber w-24 shrink-0">Carbos (%)</span>
-                  <div className="flex-1 h-[6px] bg-bg-elevated rounded-full overflow-hidden">
+                  <span className="text-xs font-bold text-salud-amber w-24 shrink-0">Carbos (g)</span>
+                  <div className="flex-1 h-[8px] bg-bg-elevated rounded-full overflow-hidden">
                     <div
                       className="h-full bg-salud-amber/60 rounded-full transition-all"
                       style={{ width: `${Math.max(0, planForm.pctCarbs)}%` }}
                     />
                   </div>
-                  <span className="text-sm font-bold text-salud-amber w-10 text-right">
-                    {Math.max(0, planForm.pctCarbs)}%
+                  <span className="text-sm font-bold text-salud-amber w-16 text-right">
+                    {Math.round((planForm.get * Math.max(0, planForm.pctCarbs) / 100) / 4)}g
                   </span>
                   <span className="text-xs text-text-tertiary w-16 text-right">
-                    {Math.round((planForm.get * Math.max(0, planForm.pctCarbs) / 100) / 4)}g
+                    {Math.round(Math.max(0, planForm.pctCarbs))}%
                   </span>
                 </div>
               </div>
               {/* Total visual */}
-              <div className={`mt-3 text-xs font-bold text-right ${planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs) === 100
+              <div className={`mt-3 text-xs font-bold text-right ${
+                  Math.abs(planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs) - 100) < 0.5
                   ? 'text-salud-green' : 'text-salud-red'
                 }`}>
-                Total: {planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs)}%
-                {planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs) !== 100 && ' — debe sumar 100%'}
+                Total: {Math.round(planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs))}%
+                {Math.abs(planForm.pctProteina + planForm.pctGrasa + Math.max(0, planForm.pctCarbs) - 100) > 0.5 && ' — debe sumar 100%'}
               </div>
             </div>
 
