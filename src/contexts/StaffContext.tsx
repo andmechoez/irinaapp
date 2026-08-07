@@ -192,6 +192,7 @@ interface StaffContextType {
   updatePatientInfografias: (patientId: string, infografias: import('../types/patients').Infografia[]) => Promise<void>;
   addEvaluation: (patientId: string, evaluationData: Omit<Evaluacion, 'id' | 'evaluadorId' | 'evaluadorNombre' | 'fecha' | 'resultados'>, measures: EvaluacionInicial) => Promise<Evaluacion>;
   addPrescription: (patientId: string, prescription: Omit<Prescripcion, 'id' | 'fechaInicio' | 'activa'>) => Promise<void>;
+  deletePatient: (patientId: string) => Promise<void>;
 }
 
 const StaffContext = createContext<StaffContextType | null>(null);
@@ -833,6 +834,24 @@ export function StaffProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Elimina un paciente de forma permanente.
+   * Esto borrará la fila en la tabla patients (y cascada si está configurado).
+   */
+  const deletePatient = async (patientId: string) => {
+    const { error } = await supabase
+      .from('patients')
+      .delete()
+      .eq('id', patientId);
+
+    if (error) {
+      console.error('Error eliminando paciente:', error);
+      throw new Error(`Error al eliminar paciente: ${error.message}`);
+    }
+
+    dispatch({ type: 'DELETE_PATIENT', payload: patientId });
+  };
+
   return (
     <StaffContext.Provider value={{
       state,
@@ -848,6 +867,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       updatePatientInfografias,
       addEvaluation,
       addPrescription,
+      deletePatient,
     }}>
       {children}
     </StaffContext.Provider>
