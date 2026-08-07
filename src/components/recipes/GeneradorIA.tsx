@@ -8,6 +8,7 @@ import { generarRecetaIA } from '../../services/aiService';
 import RecetaSkeletonLoader from './RecetaSkeletonLoader';
 import type { Receta, CategoriaReceta } from '../../types';
 import { CATEGORIAS_RECETA, getCategoriaEmoji, getCategoriaLabel } from '../../utils/recetaEngine';
+import { supabase } from '../../lib/supabase';
 
 const PATOLOGIAS_COMUNES = [
   { id: 'Diabetes', label: 'Diabetes / Glucosa Alta', color: 'bg-salud-amber-soft text-salud-amber border-salud-amber/50' },
@@ -106,9 +107,39 @@ export default function GeneradorIA({ onRecipeSaved }: GeneradorIAProps) {
     }
   };
 
-  const handleGuardar = () => {
+  const handleGuardar = async () => {
     if (!recetaGenerada) return;
+    
+    // Guardar en la tienda local
     addGeneratedRecipe(recetaGenerada);
+
+    // Guardar en la base de datos Supabase
+    try {
+      const dbRecipe = {
+        nombre: recetaGenerada.nombre,
+        descripcion: recetaGenerada.descripcion || '',
+        categoria: recetaGenerada.categoria || categoria,
+        dificultad: recetaGenerada.dificultad || 'media',
+        tiempo_preparacion_min: recetaGenerada.tiempo_preparacion_min || recetaGenerada.tiempoPreparacionMin || 25,
+        porciones_rinde: recetaGenerada.porciones_rinde || recetaGenerada.porcionesRinde || 1,
+        ingredientes: recetaGenerada.ingredientes || [],
+        instrucciones: recetaGenerada.instrucciones || [],
+        origen: 'ia',
+        macros_por_porcion: recetaGenerada.macros_por_porcion || recetaGenerada.macrosPorPorcion || { kcal: 0, prot: 0, cho: 0, grasas: 0 },
+        datos_nutricionales_avanzados: recetaGenerada.datos_nutricionales_avanzados || {},
+        apta_para_condiciones: recetaGenerada.apta_para_condiciones || recetaGenerada.aptaParaCondiciones || [],
+        restricciones: recetaGenerada.restricciones || [],
+        tags: recetaGenerada.tags || ['IA'],
+      };
+
+      const { error } = await supabase.from('recipes').insert(dbRecipe);
+      if (error) {
+        console.error('Error guardando receta de IA en Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Excepción al guardar en BD:', err);
+    }
+
     setGuardadoExitoso(true);
     setTimeout(() => {
       if (onRecipeSaved) {
