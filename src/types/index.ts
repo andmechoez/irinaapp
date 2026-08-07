@@ -361,6 +361,8 @@ export interface PatientState {
   // Rutina de rehabilitación asignada por el equipo médico
   rutinaVideoUrl?: string;
   rutinaItems?: string[];
+  // Infografías médicas asignadas por el equipo médico
+  infografias?: import('./patients').Infografia[];
 }
 
 // =============================================

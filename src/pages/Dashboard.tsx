@@ -8,6 +8,7 @@ import Card from '../components/ui/Card';
 import EmptyPatientState from '../components/patient/EmptyPatientState';
 import CheckInModal from '../components/patient/CheckInModal';
 import NutritionGuidesModal from '../components/patient/NutritionGuidesModal';
+import PatientInfografiasModal from '../components/patient/PatientInfografiasModal';
 import { Check, PlayCircle, Pill, Trophy, BookOpen, Info, Activity, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { ClinicalContent } from '../types';
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [selectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [showGuiasModal, setShowGuiasModal] = useState(false);
+  const [showInfografiasModal, setShowInfografiasModal] = useState(false);
 
   // Reto Semanal: contenido global de clinical_content
   const [reto, setReto] = useState<ClinicalContent | null>(null);
@@ -313,7 +315,10 @@ export default function Dashboard() {
           <BookOpen size={24} className="mb-2" />
           <span className="text-xs font-bold text-text-primary text-center leading-tight">Mi Guía Nutricional</span>
         </button>
-        <button className="flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border border-border bg-bg-card hover:border-salud-green/30 transition-all text-salud-green cursor-pointer h-24">
+        <button 
+          onClick={() => setShowInfografiasModal(true)}
+          className="flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border border-border bg-bg-card hover:border-salud-green/30 hover:bg-salud-green-soft/20 transition-all text-salud-green cursor-pointer h-24 active:scale-[0.97]"
+        >
           <Info size={24} className="mb-2" />
           <span className="text-xs font-bold text-text-primary text-center leading-tight">Infografías Médicas</span>
         </button>
@@ -331,6 +336,11 @@ export default function Dashboard() {
         isOpen={showGuiasModal}
         onClose={() => setShowGuiasModal(false)}
         condicionesPaciente={evaluacion.condiciones || []}
+      />
+      <PatientInfografiasModal
+        isOpen={showInfografiasModal}
+        onClose={() => setShowInfografiasModal(false)}
+        infografias={state.infografias || []}
       />
     </div>
   );

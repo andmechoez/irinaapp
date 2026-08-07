@@ -139,6 +139,7 @@ function mapDatabasePatient(p: any): Patient {
     resultadosActuales: p.resultados_actuales,
     rutinaVideoUrl: p.rutina_video_url || undefined,
     rutinaItems: p.rutina_items || undefined,
+    infografias: p.infografias || [],
     totalEvaluaciones: p.total_evaluaciones || 0,
     ultimaEvaluacion: p.ultima_evaluacion || p.created_at,
     createdAt: p.created_at,
@@ -188,6 +189,7 @@ interface StaffContextType {
   createPatient: (data: CreatePatientData) => Promise<Patient>;
   updatePatient: (patientId: string, data: UpdatePatientData) => Promise<Patient>;
   updatePatientRutina: (patientId: string, data: { videoUrl?: string; items?: string[] }) => Promise<void>;
+  updatePatientInfografias: (patientId: string, infografias: import('../types/patients').Infografia[]) => Promise<void>;
   addEvaluation: (patientId: string, evaluationData: Omit<Evaluacion, 'id' | 'evaluadorId' | 'evaluadorNombre' | 'fecha' | 'resultados'>, measures: EvaluacionInicial) => Promise<Evaluacion>;
   addPrescription: (patientId: string, prescription: Omit<Prescripcion, 'id' | 'fechaInicio' | 'activa'>) => Promise<void>;
 }
@@ -780,6 +782,33 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   };
 
   /**
+   * Actualiza la lista de infografías médicas asignadas a un paciente.
+   */
+  const updatePatientInfografias = async (patientId: string, infografias: import('../types/patients').Infografia[]) => {
+    const existing = getPatientById(patientId);
+    if (!existing) throw new Error('Paciente no encontrado');
+
+    const { error } = await supabase.from('patients').update({
+      infografias,
+      updated_at: new Date().toISOString(),
+    }).eq('id', patientId);
+
+    if (error) {
+      console.error('Error actualizando infografías:', error);
+      throw new Error(`Error al guardar infografías: ${error.message}`);
+    }
+
+    dispatch({
+      type: 'UPDATE_PATIENT',
+      payload: {
+        ...existing,
+        infografias,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  };
+
+  /**
    * Agrega una prescripción médica (fármaco, suplemento) al plan del paciente.
    * Esta prescripción aparecerá en el "Dashboard" del paciente para su seguimiento diario de adherencia.
    * 
@@ -816,6 +845,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       createPatient,
       updatePatient,
       updatePatientRutina,
+      updatePatientInfografias,
       addEvaluation,
       addPrescription,
     }}>

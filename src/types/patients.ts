@@ -5,6 +5,13 @@
 
 import type { CondicionMedica, NivelActividad, Objetivo, ResultadosMetabolicos, Sexo, ComposicionCorporal } from './index';
 
+/** Infografía médica individual para el paciente */
+export interface Infografia {
+  id: string;
+  titulo: string;
+  url: string;
+}
+
 /** Estado del paciente en la institución */
 export type PatientStatus = 'activo' | 'inactivo' | 'alta';
 
@@ -54,6 +61,9 @@ export interface Patient {
   // Rutina de Rehabilitación asignada por el equipo médico
   rutinaVideoUrl?: string;   // URL de YouTube configurada por el nutricionista
   rutinaItems?: string[];    // Lista de pasos/ejercicios de la rutina
+  
+  // Infografías médicas individuales
+  infografias?: Infografia[];
   
   // Metadata
   totalEvaluaciones: number;
