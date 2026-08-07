@@ -14,7 +14,7 @@ export default function SystemOptionsManager() {
   const [selectedCategory, setSelectedCategory] = useState<SystemOption['categoria']>('condicion');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [form, setForm] = useState<{ id?: string, valor: string, icono: string }>({ valor: '', icono: '' });
 
   const filteredOptions = options.filter(o => o.categoria === selectedCategory);
@@ -80,8 +80,8 @@ export default function SystemOptionsManager() {
       <div className="flex items-center gap-3">
         <label className="text-sm font-semibold text-text-secondary">Categoría:</label>
         <div className="w-64">
-          <Select 
-            value={selectedCategory} 
+          <Select
+            value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value as any)}
           >
             <option value="condicion">Condiciones Médicas</option>
@@ -114,20 +114,19 @@ export default function SystemOptionsManager() {
                   <td className="p-3 font-medium text-text-primary">{op.valor}</td>
                   <td className="p-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button 
+                      <button
                         onClick={() => handleOpenModal(op)}
                         className="p-1.5 text-text-tertiary hover:text-salud-blue transition-colors rounded-md hover:bg-salud-blue-soft/50"
                         title="Editar"
                       >
                         <Edit2 size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleToggleActive(op.id, op.activo)}
-                        className={`p-1.5 transition-colors rounded-md ${
-                          op.activo 
-                            ? 'text-salud-red hover:bg-salud-red-soft/50' 
+                        className={`p-1.5 transition-colors rounded-md ${op.activo
+                            ? 'text-salud-red hover:bg-salud-red-soft/50'
                             : 'text-salud-green hover:bg-salud-green-soft/50'
-                        }`}
+                          }`}
                         title={op.activo ? "Desactivar" : "Activar"}
                       >
                         <Trash2 size={16} />
@@ -145,7 +144,7 @@ export default function SystemOptionsManager() {
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-semibold text-text-primary mb-1.5">Nombre de la opción *</label>
-            <Input 
+            <Input
               placeholder="Ej. Intolerancia al Gluten"
               value={form.valor}
               onChange={(e) => setForm(prev => ({ ...prev, valor: e.target.value }))}
@@ -153,7 +152,7 @@ export default function SystemOptionsManager() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-text-primary mb-1.5">Ícono (Emoji opcional)</label>
-            <Input 
+            <Input
               placeholder="Ej. 🍞"
               value={form.icono}
               onChange={(e) => setForm(prev => ({ ...prev, icono: e.target.value }))}

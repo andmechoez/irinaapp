@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Users, ClipboardPlus, Activity, AlertTriangle, UserPlus, ChevronRight, CalendarCheck } from 'lucide-react';
+import { Users, ClipboardPlus, Activity, AlertTriangle, UserPlus, ChevronRight, CalendarCheck, BookOpen } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useStaff } from '../../contexts/StaffContext';
 import StatCard from '../../components/ui/StatCard';
@@ -190,6 +190,20 @@ export default function StaffDashboard() {
                 <div className="text-left">
                   <p className="text-sm font-semibold text-text-primary">Mis Pacientes</p>
                   <p className="text-[11px] text-text-tertiary">Gestionar pacientes</p>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate('/staff/contenido')}
+                className="w-full flex items-center gap-3 p-3 rounded-[var(--radius-md)] border border-border/40
+                           hover:border-salud-blue/30 hover:bg-salud-blue-soft/20
+                           transition-all cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-salud-blue-soft flex items-center justify-center text-salud-blue group-hover:bg-salud-blue group-hover:text-white transition-colors">
+                  <BookOpen size={18} />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-text-primary">Guías Nutricionales</p>
+                  <p className="text-[11px] text-text-tertiary">Subir y gestionar guías</p>
                 </div>
               </button>
             </div>

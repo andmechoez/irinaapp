@@ -43,6 +43,19 @@ export interface ClinicalContent {
   items?: string[];         // Lista de ítems de la rutina (pasos a seguir)
 }
 
+/** Guía nutricional subida por el staff, asociada a 1+ condiciones médicas */
+export interface NutritionGuide {
+  id: string;
+  titulo: string;
+  descripcion?: string;
+  url: string;                  // Link al PDF u otro recurso
+  condiciones: string[];        // Valores de system_options categoria='condicion'
+  subido_por?: string;          // UUID del staff
+  subido_por_nombre?: string;   // Nombre para mostrar
+  activo: boolean;
+  created_at?: string;
+}
+
 export interface EvaluacionInicial {
   id?: string;
   userId: string;

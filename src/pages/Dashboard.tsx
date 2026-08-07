@@ -7,6 +7,7 @@ import AlertBanner from '../components/ui/AlertBanner';
 import Card from '../components/ui/Card';
 import EmptyPatientState from '../components/patient/EmptyPatientState';
 import CheckInModal from '../components/patient/CheckInModal';
+import NutritionGuidesModal from '../components/patient/NutritionGuidesModal';
 import { Check, PlayCircle, Pill, Trophy, BookOpen, Info, Activity, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { ClinicalContent } from '../types';
@@ -17,22 +18,23 @@ export default function Dashboard() {
 
   const [selectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
-  
+  const [showGuiasModal, setShowGuiasModal] = useState(false);
+
   // Reto Semanal: contenido global de clinical_content
   const [reto, setReto] = useState<ClinicalContent | null>(null);
 
   useEffect(() => {
     async function fetchDynamicContent() {
       if (!evaluacion) return;
-      
+
       const { data, error } = await supabase
         .from('clinical_content')
         .select('*')
         .eq('is_active', true);
-        
+
       if (!error && data) {
-        const validRetos = data.filter(c => 
-          c.type === 'reto' && 
+        const validRetos = data.filter(c =>
+          c.type === 'reto' &&
           (!c.trigger_condition || evaluacion.condiciones.includes(c.trigger_condition)) &&
           (!c.trigger_objective || c.trigger_objective === evaluacion.objetivo)
         );
@@ -48,7 +50,7 @@ export default function Dashboard() {
   const rutinaVideoUrl = state.rutinaVideoUrl;
   const rutinaItems = state.rutinaItems;
   const hasRutina = !!(rutinaVideoUrl || (rutinaItems && rutinaItems.length > 0));
-  
+
   if (!evaluacion || !resultados) {
     return <EmptyPatientState />;
   }
@@ -67,14 +69,14 @@ export default function Dashboard() {
   const handlePrescriptionTake = (prescripcionId: string) => {
     const isTaken = adherencia.some(a => a.prescripcionId === prescripcionId && a.tomada);
     if (isTaken) return;
-    
+
     const newAdherence = [...adherencia, { prescripcionId, horaToma: new Date().toISOString(), tomada: true }];
-    dispatch({ 
-      type: 'LOG_HABITS', 
-      payload: { 
-        fecha: selectedDate, 
+    dispatch({
+      type: 'LOG_HABITS',
+      payload: {
+        fecha: selectedDate,
         adherenciaPrescripciones: newAdherence // We need to update the reducer to support this
-      } 
+      }
     });
   };
 
@@ -165,11 +167,10 @@ export default function Dashboard() {
                     key={p.id}
                     disabled={isTaken}
                     onClick={() => handlePrescriptionTake(p.id)}
-                    className={`w-full flex items-center justify-between p-2 rounded-[var(--radius-md)] border transition-all duration-200 ${
-                      isTaken 
-                        ? 'border-salud-green bg-salud-green-soft opacity-80 cursor-default' 
+                    className={`w-full flex items-center justify-between p-2 rounded-[var(--radius-md)] border transition-all duration-200 ${isTaken
+                        ? 'border-salud-green bg-salud-green-soft opacity-80 cursor-default'
                         : 'border-border bg-bg-card cursor-pointer hover:border-salud-green/40'
-                    }`}
+                      }`}
                   >
                     <div className="text-left">
                       <span className={`block font-medium text-sm ${isTaken ? 'text-salud-green font-bold' : 'text-text-primary'}`}>
@@ -177,9 +178,8 @@ export default function Dashboard() {
                       </span>
                       <span className="text-xs text-text-tertiary">{p.dosis} • {p.frecuencia}</span>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                      isTaken ? 'bg-salud-green border-salud-green' : 'border-text-tertiary'
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isTaken ? 'bg-salud-green border-salud-green' : 'border-text-tertiary'
+                      }`}>
                       {isTaken && <Check size={14} className="text-white" strokeWidth={3} />}
                     </div>
                   </button>
@@ -305,7 +305,11 @@ export default function Dashboard() {
 
       {/* Guías e Infografías */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-4">
-        <button className="flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border border-border bg-bg-card hover:border-salud-blue/30 transition-all text-salud-blue cursor-pointer h-24">
+        <button
+          id="btn-guia-nutricional"
+          onClick={() => setShowGuiasModal(true)}
+          className="flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border border-border bg-bg-card hover:border-salud-blue/30 hover:bg-salud-blue-soft/20 transition-all text-salud-blue cursor-pointer h-24 active:scale-[0.97]"
+        >
           <BookOpen size={24} className="mb-2" />
           <span className="text-xs font-bold text-text-primary text-center leading-tight">Mi Guía Nutricional</span>
         </button>
@@ -313,16 +317,21 @@ export default function Dashboard() {
           <Info size={24} className="mb-2" />
           <span className="text-xs font-bold text-text-primary text-center leading-tight">Infografías Médicas</span>
         </button>
-        <button className="hidden lg:flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border border-border bg-bg-card hover:border-salud-amber/30 transition-all text-salud-amber cursor-pointer h-24">
+        {/* <button className="hidden lg:flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border border-border bg-bg-card hover:border-salud-amber/30 transition-all text-salud-amber cursor-pointer h-24">
           <Trophy size={24} className="mb-2" />
           <span className="text-xs font-bold text-text-primary text-center leading-tight">Logros Semanales</span>
         </button>
         <button className="hidden lg:flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border border-border bg-bg-card hover:border-salud-purple/30 transition-all text-salud-purple cursor-pointer h-24">
           <PlayCircle size={24} className="mb-2" />
           <span className="text-xs font-bold text-text-primary text-center leading-tight">Videos Educativos</span>
-        </button>
+        </button> */}
       </div>
       <CheckInModal isOpen={isCheckInOpen} onClose={() => setIsCheckInOpen(false)} selectedDate={selectedDate} />
+      <NutritionGuidesModal
+        isOpen={showGuiasModal}
+        onClose={() => setShowGuiasModal(false)}
+        condicionesPaciente={evaluacion.condiciones || []}
+      />
     </div>
   );
 }
