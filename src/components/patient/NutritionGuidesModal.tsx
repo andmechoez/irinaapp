@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, BookOpen, ExternalLink, FileText, Loader2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { NutritionGuide } from "../../types";
@@ -71,7 +71,7 @@ export default function NutritionGuidesModal({ isOpen, onClose, condicionesPacie
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div className="flex-1 overflow-y-auto px-5 pt-5 pb-24 sm:pb-5">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-text-tertiary">
               <Loader2 size={28} className="animate-spin text-salud-blue" />
