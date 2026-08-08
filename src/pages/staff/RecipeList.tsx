@@ -82,13 +82,39 @@ export default function RecipeList() {
     return buscarRecetas(filtrosCombinados, catalogoUnificado);
   }, [filtros, searchText, catalogoUnificado]);
 
+  const handleDeleteRecipe = async (r: Receta) => {
+    const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar la receta "${r.nombre}"?`);
+    if (!confirmDelete) return;
+
+    if (r.origen === 'ia') {
+      removeGeneratedRecipe(r.id);
+    } else {
+      const { error } = await supabase
+        .from('recipes')
+        .delete()
+        .eq('id', r.id);
+
+      if (error) {
+        console.error('Error al eliminar la receta de la base de datos:', error.message);
+        alert('No se pudo eliminar la receta: ' + error.message);
+      } else {
+        alert('Receta eliminada con éxito del catálogo.');
+        setRecetas(prev => prev.filter(item => item.id !== r.id));
+      }
+    }
+  };
+
   if (recetaSeleccionada) {
     return (
       <div className="space-y-6 animate-fade-in">
         <RecetaDetalle
           receta={recetaSeleccionada}
           onClose={() => setRecetaSeleccionada(null)}
-          onDelete={recetaSeleccionada.origen === 'ia' ? () => removeGeneratedRecipe(recetaSeleccionada.id) : undefined}
+          onDelete={() => {
+            const selected = recetaSeleccionada;
+            setRecetaSeleccionada(null);
+            handleDeleteRecipe(selected);
+          }}
         />
       </div>
     );
@@ -212,7 +238,7 @@ export default function RecipeList() {
                       key={r.id}
                       receta={r}
                       onSelect={() => setRecetaSeleccionada(r)}
-                      onDelete={r.origen === 'ia' ? () => removeGeneratedRecipe(r.id) : undefined}
+                      onDelete={() => handleDeleteRecipe(r)}
                     />
                   ))}
                 </div>
