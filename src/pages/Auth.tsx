@@ -52,7 +52,12 @@ export default function Auth() {
     });
 
     if (authError) {
-      setError('Correo o contraseña incorrectos.');
+      console.error("Auth error:", authError);
+      setError(
+        authError.message === 'Invalid login credentials'
+          ? 'Correo o contraseña incorrectos.'
+          : `Error de inicio de sesión: ${authError.message}`
+      );
       setIsLoading(false);
       return;
     }

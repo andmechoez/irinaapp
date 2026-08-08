@@ -130,8 +130,9 @@ export default function PatientCreate() {
       
       const newPatient = await createPatient(patientToCreate);
       navigate(`/staff/pacientes/${newPatient.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al crear paciente', error);
+      alert(`Error al crear paciente: ${error?.message || 'Error desconocido'}`);
       setIsSubmitting(false);
     }
   };
